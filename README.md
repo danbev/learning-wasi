@@ -110,6 +110,13 @@ error occurred: Command "ccache" "clang" "-Qunused-arguments" "-O3" "-ffunction-
 ```
 Make sure you unset your `ccache` environment variables.
 
+I was still not able to build and it seems like there is something wrong with
+clang and the wasm target I have. I was able to download [wasi-sdk](https://github.com/CraneStation/wasi-sdk/releases) and unpack it.
+
+```console
+$ rustc --print sysroot
+/Users/danielbevenius/.rustup/toolchains/nightly-x86_64-apple-darwin
+```
 
 ### Building wasi-libc
 ```console
