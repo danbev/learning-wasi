@@ -1,7 +1,6 @@
 #include <stdio.h>
 
-int main(void)
-{
-    puts("First wasi...");
-    return 0;
+int main(int argc, char** argv) {
+  fprintf(stderr, "first...\n");
+  return 0;
 }
