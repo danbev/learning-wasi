@@ -74,6 +74,7 @@ $ rustup target add wasm32-wasi --toolchain nightly
 ```
 
 ### wasmtime
+Use the following command to build wasmtime:
 ```console
 $ CC="clang" CXX="clang++" cargo +nightly build --release
 ```
@@ -98,9 +99,10 @@ $ cp ~/Downloads/libclang_rt.builtins-wasm32.a /usr/local/Cellar/llvm/8.0.0_1/li
 ```console
 $ make
 ```
-Run first.wasm with wasmtime:
+
+### Run a WebAssembly binary with wasmtime:
 ```console
-$ wasmtime/target/debug/wasmtime out/first.wasmvoid
+$ wasmtime/target/debug/wasmtime out/first.wasm
 ```
 
 ### Debugging wasmtime

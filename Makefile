@@ -7,6 +7,10 @@ out/first.wasm: src/first.c | out
 out: 
 	@mkdir $@
 
+.PHONY: run
+run:
+	wasmtime/target/debug/wasmtime out/first.wasm
+
 .PHONY: clean
 
 clean: 
