@@ -233,6 +233,7 @@ $ cd build
 $ cmake -G Ninja -DCMAKE_INSTALL_PREFIX=/opt/llvm-dist/ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi" ../llvm
 $ ninja
 $ ninja dist
+```
 
 ### Installing ninja
 ```console
