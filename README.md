@@ -222,7 +222,6 @@ const memory = new WebAssembly.Memory({initial:10, maximum:100});
 ```
 `10` and `100` are specified in pages which are fixed to 64KiB.
 So here we are saying that we want an initial size of 640KiB.
-```
 
 ### musl
 A libc implementation. Pronounced muscle.
