@@ -193,7 +193,7 @@ Export:
 ```
 
 ### wasm c-api
-The following repo, [wasm-c-api](git@github.com:rossberg/wasm-c-api.git) a C API to allow you
+The following repo, [wasm-c-api](https://github.com:rossberg/wasm-c-api) a C API to allow you
 to use function defined in wasm from C/C++.
 
 Make sure you configure V8 to have the following configuration options:
