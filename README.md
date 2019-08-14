@@ -69,6 +69,7 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ rustup install nightly-x86_64-apple-darwin
 ```
 Add the `wasm32-wasi` target:
+```console
 $ rustup target add wasm32-wasi --toolchain nightly
 ```
 
@@ -250,20 +251,17 @@ So here we are saying that we want an initial size of 640KiB.
 ### musl
 A libc implementation. Pronounced muscle.
 
-### Motivation
-"V8 is completely sandboxed and does not offer a way to talk to host systems. 
-Node.js is a way to open up V8 to allow it to take to the host system. Unfortunately, 
-Node.js completely opens up the host system to the application in an uncontrolled and unmanaged way."
+### Building llvm
+```console
+$ mkdir build
+$ cd build
+$ cmake -G Ninja -DCMAKE_INSTALL_PREFIX=/opt/llvm-dist/ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi" ../llvm
+$ ninja
+$ ninja dist
 
-Unlike Docker which also provides fine grained sandboxing, WebAssembly operates 
-at the application level not the OS userland level. This means WebAssembly 
-programs can be started faster and consume less resources 
-on both the host system and also when being transported over the wire.
-
-A completely sandboxed and lightweight environment can allow for more tightly 
-packing serverless applications on the same machine - allowing for serverless 
-providers to lower costs. Additionally, startup times should be much lower (theoretically on the order of 1-2 ms).
-
-Also, WebAssembly is meant to be completely language agnostic so in the future, 
-you should be able to run whatever languages are capable of running in a 
-WebAssembly environment, which could be every language.
+### Installing ninja
+```console
+$ git clone git://github.com/martine/ninja.git
+$ configure.py --bootstrap
+```
+The ninja executable will be in the same directory.
