@@ -241,3 +241,23 @@ $ git clone git://github.com/martine/ninja.git
 $ configure.py --bootstrap
 ```
 The ninja executable will be in the same directory.
+
+
+### Troubleshooting
+wasmtime compilation error:
+```console
+cargo:warning=In file included from signalhandlers/SignalHandlers.cpp:8:
+cargo:warning=In file included from signalhandlers/SignalHandlers.hpp:5:
+cargo:warning=/usr/local/opt/llvm/bin/../include/c++/v1/setjmp.h:35:15: fatal error: 'setjmp.h' file not found
+cargo:warning=#include_next <setjmp.h>
+cargo:warning=              ^~~~~~~~~~
+cargo:warning=1 error generated.
+exit code: 1
+
+--- stderr
+```
+It seems that after upgrading to Mojove some headers were no longer in the `/include`
+directory. These can be installed using the following command:
+```console
+open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
+```

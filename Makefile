@@ -9,7 +9,7 @@ out:
 
 .PHONY: run
 run:
-	wasmtime/target/debug/wasmtime out/first.wasm
+	RUST_BACKTRACE=1 wasmtime/target/release/wasmtime out/first.wasm
 
 .PHONY: clean
 
