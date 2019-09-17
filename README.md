@@ -261,3 +261,25 @@ directory. These can be installed using the following command:
 ```console
 open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
 ```
+
+
+### fd_write
+The example [fd_write.wat](src/fd_write.wat) shows the usage of the
+fd_write(https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call. 
+The input to fd_write are:
+```
+__wasi_fd_write(__wasi_fd_t fd, const __wasi_ciovec_t *iovs and size_t iovs_len
+```
+`__wasi_fd_t` is just defined as:
+```c
+typedef uint32_t uvwasi_fd_t;
+```
+
+And `__wasi_ciovec_t` as:
+```c
+typedef struct uvwasi_ciovec_s {
+  const void* buf;
+  size_t buf_len;
+} uvwasi_ciovec_t;
+```
+So we can see that we have a pointer to a buffer and a length.
