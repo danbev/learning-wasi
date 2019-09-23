@@ -263,6 +263,20 @@ open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10
 ```
 
 
+```console
+c/cant_dotdot.c:1:10: fatal error: 'assert.h' file not found
+#include <assert.h>
+         ^~~~~~~~~~
+1 error generated.
+
+or 
+
+/usr/include/sys/cdefs.h:784:2: error: Unsupported architecture
+#error Unsupported architecture
+```
+Make sure you have specifed the correct --sysroot.
+
+
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
 fd_write(https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call. 
