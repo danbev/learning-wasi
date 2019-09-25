@@ -167,6 +167,7 @@ promise.then((result) => {
   const addTwo = instance.exports.addTwo;
   console.log(addTwo(1, 2));
 });
+```
 Lets take a closer look at the WebAssembly API.
 
 `WebAssembly` is the how the api is exposed.
@@ -279,7 +280,7 @@ Make sure you have specifed the correct --sysroot.
 
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
-fd_write(https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call. 
+[fd_write](https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call.
 The input to fd_write are:
 ```
 __wasi_fd_write(__wasi_fd_t fd, const __wasi_ciovec_t *iovs and size_t iovs_len
@@ -297,3 +298,273 @@ typedef struct uvwasi_ciovec_s {
 } uvwasi_ciovec_t;
 ```
 So we can see that we have a pointer to a buffer and a length.
+
+### Wasm modules
+Sections in a module
+```
+* Types
+* Import
+* Function
+* Tables
+* Memory
+* Global
+* Export
+* Start
+* Element
+* Code
+* Data
+```
+
+#### Types section
+Are function signatures that can be reused, for example for imports, functions
+definitaions.
+
+#### Table section
+This maps values like JavaScript objects or OS file handles. Its a way to
+allow the wasm module to access something outside its memory. For example, say
+you have a function pointer which we want to call from our wasm module. If we 
+had direct access to this memory pointer we might be able to learn about the 
+memory layout and exploit it. For example, updating the pointer to something
+different might execute some other piece of code.
+A table is an array that lives outside of wasm's memory and the values stored
+in the array are references to functions.
+
+#### Element section
+This section allows for the intialization the content or a table imported
+or defined in the table section. What would this be like, would this be like
+passing in an empty table entry and populating it with a function pointer to
+a function in the wasm module. But would we not just export the function in 
+that was (I'm probabably not understanding the usage here fully).
+
+#### Memory section
+Defines the optional memory of the module by defining its initial and max
+size. This memory can be initialized by the data section.
+
+
+#### Global section
+This section contains any global (think static C variables).
+
+### Export section
+This are functions, tables, memory segements and global variables that are made
+available to the host.
+
+
+#### Stack
+The Stack operations takes their operands from—and put their result onto—the
+stack. There is now way to inspect the stack apart from using opcodes that 
+push and pop values from the stack.
+
+#### Local and globals
+Locals and globals are like variables, they are named and can hold any of the
+same basic types as the stack can hold (i32, et al.)
+
+#### Memory
+Memory is linear so all memory addresses used are expressed in terms of byte
+offsets from the beginning of a memory segment
+
+```
+i32.load alignment offset
+```
+Now, operators can have immediate arguments and are considered part of the
+instructions themselves.  The `alignment` is a hint of the alignment
+```
+0 = 8 bit
+1 = 16 bit
+2 = 32 bit
+3 = 64 bit
+```
+```
+        8-bit 16-bit 32-bit         64-bit
+         ↓    ↓       ↓               ↓
+      [00][00][00][00][00][00][00][00][00][00][00][00]...
+8-bit [ 0][ 1][ 2][ 3][ 4][ 5][ 6][ 7][ 8][ 9][10][11]...
+16-bit[  0   ][  1   ][   2  ][   3  ][   4  ][  5   ]...
+32-bit[      0       ][       1      ][      2       ]...
+64-bit[              0               ][              1             ]...
+```
+The second immediate for load is the address `offset`. The effective
+address is the sum of the address operand and the offset.
+```
+                    (stack)          (immediate)
+effective-address = address-operand + offset
+```
+The reason for the offset is when using dynamic memory where a compiler
+may add a constant offset to all memory operations in order to relocate one
+area of memory to another.
+
+So when we want to store a value in memory we need to specify a address
+operand
+```
+i32.const 0    // address operand
+i32.const 18   // value to store
+i32.store 2 0  // 2 = 32-bit/4-byte alignment, 0 = offset
+```
+This would store the value `18` at address 0:
+```
+                    32-bit
+                     ↓
+      [12][00][00][00][00][00][00][00][00][00][00][00]...
+      [       0      ][       1      ][      2       ]...
+```
+Notice that everything is stored in little endian.
+
+
+#### Element
+Elements are “handles” for opaque foreign values (like OS file handles.)
+
+### libuv Wasi (uvwasi)
+```c
+typedef struct uvwasi_s {
+  struct uvwasi_fd_table_t fds;
+  size_t argc;
+  char** argv;
+  char* argv_buf;
+  size_t argv_buf_size;
+  size_t envc;
+  char** env;
+  char* env_buf;
+  size_t env_buf_size;
+} uvwasi_t;
+```
+So we have a file descriptor table first followed by argc and argv. 
+These are the arguments passed to the module. How are the passed?
+
+In the uvwasi example these are configured programatically:
+```c
+  uvwasi_options_t init_options;
+  ...
+  init_options.argc = 3;
+  init_options.argv = calloc(3, sizeof(char*));
+  init_options.argv[0] = "--foo=bar";
+  init_options.argv[1] = "-baz";
+  init_options.argv[2] = "100";
+  init_options.envp = (const char**) environ;
+  init_options.preopenc = 1;
+  init_options.preopens = calloc(1, sizeof(uvwasi_preopen_t));
+  init_options.preopens[0].mapped_path = "/var";
+  init_options.preopens[0].real_path = ".";
+
+```
+```c:
+  r = uvwasi_init(uvw, &init_options);
+```
+
+### Inspecting the linked libraries
+```console
+$ otool -L  out/app
+out/app:
+	/usr/local/lib/libuv.1.dylib (compatibility version 2.0.0, current version 2.0.0)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1252.250.1)
+```
+You can also use this environment variable:
+```console
+$ DYLD_PRINT_LIBRARIES=1 out/app
+dyld: loaded: /Users/danielbevenius/work/wasm/uvwasi/out/app
+dyld: loaded: /usr/local/lib/libuv.1.dylib
+dyld: loaded: /usr/lib/libSystem.B.dylib
+dyld: loaded: /usr/lib/system/libcache.dylib
+dyld: loaded: /usr/lib/system/libcommonCrypto.dylib
+dyld: loaded: /usr/lib/system/libcompiler_rt.dylib
+dyld: loaded: /usr/lib/system/libcopyfile.dylib
+dyld: loaded: /usr/lib/system/libcorecrypto.dylib
+dyld: loaded: /usr/lib/system/libdispatch.dylib
+dyld: loaded: /usr/lib/system/libdyld.dylib
+dyld: loaded: /usr/lib/system/libkeymgr.dylib
+dyld: loaded: /usr/lib/system/liblaunch.dylib
+dyld: loaded: /usr/lib/system/libmacho.dylib
+dyld: loaded: /usr/lib/system/libquarantine.dylib
+dyld: loaded: /usr/lib/system/libremovefile.dylib
+dyld: loaded: /usr/lib/system/libsystem_asl.dylib
+dyld: loaded: /usr/lib/system/libsystem_blocks.dylib
+dyld: loaded: /usr/lib/system/libsystem_c.dylib
+dyld: loaded: /usr/lib/system/libsystem_configuration.dylib
+dyld: loaded: /usr/lib/system/libsystem_coreservices.dylib
+dyld: loaded: /usr/lib/system/libsystem_darwin.dylib
+dyld: loaded: /usr/lib/system/libsystem_dnssd.dylib
+dyld: loaded: /usr/lib/system/libsystem_info.dylib
+dyld: loaded: /usr/lib/system/libsystem_m.dylib
+dyld: loaded: /usr/lib/system/libsystem_malloc.dylib
+dyld: loaded: /usr/lib/system/libsystem_networkextension.dylib
+dyld: loaded: /usr/lib/system/libsystem_notify.dylib
+dyld: loaded: /usr/lib/system/libsystem_sandbox.dylib
+dyld: loaded: /usr/lib/system/libsystem_secinit.dylib
+dyld: loaded: /usr/lib/system/libsystem_kernel.dylib
+dyld: loaded: /usr/lib/system/libsystem_platform.dylib
+dyld: loaded: /usr/lib/system/libsystem_pthread.dylib
+dyld: loaded: /usr/lib/system/libsystem_symptoms.dylib
+dyld: loaded: /usr/lib/system/libsystem_trace.dylib
+dyld: loaded: /usr/lib/system/libunwind.dylib
+dyld: loaded: /usr/lib/system/libxpc.dylib
+dyld: loaded: /usr/lib/libobjc.A.dylib
+dyld: loaded: /usr/lib/libc++abi.dylib
+dyld: loaded: /usr/lib/libc++.1.dylib
+uvwasi_fd_fdstat_get()
+	stats.fs_rights_base = 6291603
+uvwasi_fd_fdstat_get()
+	stats.fs_rights_base = 6291603
+```
+In my case I don't want to use the system libuv but instead on that I've build
+with debug symbols.
+
+
+Show contents of archive:
+```console
+$ ar -t ~/work/nodejs/libuv/out/Debug/libuv.a
+__.SYMDEF SORTED
+fs-poll.o
+idna.o
+inet.o
+threadpool.o
+timer.o
+uv-data-getter-setters.o
+uv-common.o
+version.o
+async.o
+core.o
+dl.o
+fs.o
+getaddrinfo.o
+getnameinfo.o
+loop.o
+loop-watcher.o
+pipe.o
+poll.o
+process.o
+signal.o
+stream.o
+tcp.o
+thread.o
+tty.o
+udp.o
+proctitle.o
+darwin.o
+fsevents.o
+darwin-proctitle.o
+bsd-ifaddrs.o
+kqueue.o
+```
+See all the symbols:
+```console
+$ nm ~/work/nodejs/libuv/out/Debug/libuv.a
+```
+
+```console
+gcc -o ./out/app out/obj/uvwasi.o out/obj/fd_table.o out/obj/uv_mapping.o app.c -g -L/Users/danielbevenius/work/nodejs/libuv/out/Debug/ -luv -Wall -Wsign-compare -I./include -luv
+Undefined symbols for architecture x86_64:
+  "_uv_gettimeofday", referenced from:
+      _uvwasi_clock_time_get in uvwasi.o
+ld: symbol(s) not found for architecture x86_64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+```
+```console
+$ ar -t ~/work/nodejs/libuv/out/Debug/libuv.a  | grep _uv_gettimeof_day
+```
+Notice that this symbol does not exist.
+
+```console
+$ man dyld
+```
+Now run with `DYLD_LIBRARY_PATH`
+```console
+$ DYLD_LIBRARY_PATH=/Users/danielbevenius/work/nodejs/libuv-build/lib ./out/app
+```
