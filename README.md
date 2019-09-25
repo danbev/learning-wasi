@@ -395,10 +395,13 @@ area of memory to another.
 So when we want to store a value in memory we need to specify a address
 operand
 ```
-i32.const 0    // address operand
-i32.const 18   // value to store
-i32.store 2 0  // 2 = 32-bit/4-byte alignment, 0 = offset
+i32.const 0                  ;; address operand
+i32.const 18                 ;; value to store
+i32.store offset=0 align=2   ;; size_buf_len
 ```
+The offset defaults to 𝟶, the alignment to the storage size of the
+respective memory access, which is its natural alignment.
+
 This would store the value `18` at address 0:
 ```
                     32-bit
