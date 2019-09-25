@@ -415,6 +415,38 @@ Notice that everything is stored in little endian.
 #### Element
 Elements are “handles” for opaque foreign values (like OS file handles.)
 
+
+#### Labels
+Unlike with other index spaces, indexing of labels is relative by nesting
+depth, that is, label 0 refers to the innermost structured control instruction
+enclosing the referring branch instruction, while increasing indices refer to
+those farther out. 
+
+
+### get_args_sizes_get
+The example [read_arg.wat](src/read_arg.wat) contains an example of calling 
+[__wasi_args_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_args_sizes_get).
+
+This shown an important point that I totally missed when first looking at calling
+it. Looking at the documentation we can see that this function outputs:
+```
+size_t argc            The number of arguments
+size_t argv_buf_size   The size of the argument string data.
+```
+What I did not understand was that there are pointers that are passed into the
+function. So we have to specify the memory locations that it should use to 
+populate these values. 
+
+The test can be run manually:
+```console
+$ ./wasmtime/target/release/wasmtime src/read_arg.wat one two three four five six
+$ echo $?
+7
+```
+Just note that the name of the program also counts as an argument.
+
+
+
 ### libuv Wasi (uvwasi)
 ```c
 typedef struct uvwasi_s {
