@@ -299,6 +299,28 @@ typedef struct uvwasi_ciovec_s {
 ```
 So we can see that we have a pointer to a buffer and a length.
 
+### args_sizes_get
+The example [args_sizes_get.wat](src/args_sizes_get.wat) contains an example of calling 
+[__wasi_args_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_args_sizes_get).
+
+This shown an important point that I totally missed when first looking at calling
+it. Looking at the documentation we can see that this function outputs:
+```
+size_t argc            The number of arguments
+size_t argv_buf_size   The size of the argument string data.
+```
+What I did not understand was that there are pointers that are passed into the
+function. So we have to specify the memory locations that it should use to 
+populate these values. 
+
+The test can be run manually:
+```console
+$ ./wasmtime/target/release/wasmtime src/args_sizes_get.wat one two three four five six
+$ echo $?
+7
+```
+Just note that the name of the program also counts as an argument.
+
 ### Wasm modules
 Sections in a module
 ```
@@ -423,27 +445,6 @@ enclosing the referring branch instruction, while increasing indices refer to
 those farther out. 
 
 
-### args_sizes_get
-The example [args_sizes_get.wat](src/args_sizes_get.wat) contains an example of calling 
-[__wasi_args_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_args_sizes_get).
-
-This shown an important point that I totally missed when first looking at calling
-it. Looking at the documentation we can see that this function outputs:
-```
-size_t argc            The number of arguments
-size_t argv_buf_size   The size of the argument string data.
-```
-What I did not understand was that there are pointers that are passed into the
-function. So we have to specify the memory locations that it should use to 
-populate these values. 
-
-The test can be run manually:
-```console
-$ ./wasmtime/target/release/wasmtime src/args_sizes_get.wat one two three four five six
-$ echo $?
-7
-```
-Just note that the name of the program also counts as an argument.
 
 
 
