@@ -13,7 +13,12 @@ run:
 
 .PHONY: fd_write
 fd_write:
-	@wasmtime/target/release/wasmtime src/fd_write.wat
+	@wasmtime/target/release/wasmtime src/$@.wat
+
+.PHONY: args_sizes_get
+args_sizes_get:
+	@wasmtime/target/release/wasmtime src/$@.wat arg1 arg2 arg3
+	@echo "status:$?"
 
 .PHONY: clean
 

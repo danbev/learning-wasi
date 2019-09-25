@@ -423,8 +423,8 @@ enclosing the referring branch instruction, while increasing indices refer to
 those farther out. 
 
 
-### get_args_sizes_get
-The example [read_arg.wat](src/read_arg.wat) contains an example of calling 
+### args_sizes_get
+The example [args_sizes_get.wat](src/args_sizes_get.wat) contains an example of calling 
 [__wasi_args_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_args_sizes_get).
 
 This shown an important point that I totally missed when first looking at calling
@@ -439,7 +439,7 @@ populate these values.
 
 The test can be run manually:
 ```console
-$ ./wasmtime/target/release/wasmtime src/read_arg.wat one two three four five six
+$ ./wasmtime/target/release/wasmtime src/args_sizes_get.wat one two three four five six
 $ echo $?
 7
 ```
