@@ -321,6 +321,16 @@ $ echo $?
 ```
 Just note that the name of the program also counts as an argument.
 
+### environ_sizes_get
+The example [environ_sizes_get.wat](src/environ_sizes_get.wat) contains an 
+example of calling [__wasi_environ_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_environ_sizes_get).
+
+```console
+$ ./wasmtime/target/release/wasmtime --env="ONE=1" --env="TWO=2" src/environ_sizes_get.wat
+$ echo $?
+2
+```
+
 ### Wasm modules
 Sections in a module
 ```
