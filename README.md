@@ -49,7 +49,7 @@ $ rustup target add wasm32-wasi --toolchain nightly
 ### wasmtime
 Use the following command to build wasmtime:
 ```console
-$ CC="clang" CXX="clang++" cargo +nightly build --release
+$ RUSTFLAGS=-g CC="clang" CXX="clang++" cargo +nightly build --release
 ```
 
 ### Building wasi-libc
@@ -321,6 +321,123 @@ $ echo $?
 ```
 Just note that the name of the program also counts as an argument.
 
+### args_get
+For this example we need to set up an char** to store the information in.
+We need to pass this into the args_get function and it will populate the.
+
+The documentation for args_get states that the sizes of the buffers should
+match that returned by __wasi_args_sizes_get(). In this case we are going to
+hard code these sizes for simplicity.
+
+The example [args_get.wat](src/args_get.wat) currently hard codes everything
+and should be invoked with like this:
+:
+```console
+$ ./wasmtime/target/release/wasmtime src/args_get.wat one two
+args_get.wat
+one
+two
+```
+The reason for doing this is to demonstrate and make the example as simple as
+possible so that I understand how memory management works.
+
+Take the following C main function:
+```
+int main(int argc, char** argv) {
+```
+The standard library will set up argv for us:
+```
+ argv           char*
++-------+      +--------+      +--------+
+|address| ---->|address | ---->|progname|
++-------+      +--------+      +--------+
+```
+The following is using a simple C example:
+```console
+$ lldb -- ptp one two three
+(lldb) expr argv
+(char **) $1 = 0x00007ffeefbfefd8
+(lldb) memory read -f x -s 8 -c 8 0x00007ffeefbfefb8
+0x7ffeefbfefb8: 0x00007ffeefbff288 0x00007ffeefbff2d3
+0x7ffeefbfefc8: 0x00007ffeefbff2d7 0x00007ffeefbff2db
+
+(lldb) expr *argv
+(char *) $1 = 0x00007ffeefbff288 "/Users/danielbevenius/work/c++/learningc++11/src/fundamentals/pointers/ptp"
+```
+
+We can visualize this:
+```
+
+      char**                      char*
++------------------+       +------------------+       +--------+
+|0x00007ffeefbfefb8| ----> |0x00007ffeefbff288| ----> |progname|
++------------------+       +------------------+       +--------+
+                           +------------------+       +--------+
+                           |0x00007ffeefbff2d3| ----> | "one"  |
+                           +------------------+       +--------+
+                           +------------------+       +--------+
+                           |0x00007ffeefbff2d7| ----> | "two"  |
+                           +------------------+       +--------+
+                           +------------------+       +--------+
+                           |0x00007ffeefbff2db| ----> | "three"|
+                           +------------------+       +--------+
+```
+In our case with `get_args` we need to set this memory up manually. First, we
+need argv** which is a pointer, size 4 if we are using 32 bit addressing.
+```
+argv:
+    i32.const 0  ;; offset for argv pointer
+    i32.const 0  ;; value 
+    i32.store align=2
+```
+Remember the pointers should all come after each other in memory, so we should
+be able to add able to dereference argv to get the first pointer, then add 4
+to get to the second pointer.
+So 
+```        
++------------------+       +------------------+       +--------------+
+|      4           | ----> |                  | ----> |"args_get.wat"|
++------------------+       +------------------+       +--------------+
+0                  3       4                  8       64             76
+                           +------------------+       +--------+
+                           |                  | ----> | "one"  |
+                           +------------------+       +--------+
+                           9                 13       77      80
+                           +------------------+       +--------+
+                           |                  | ----> | "two"  |
+                           +------------------+       +--------+
+                           14                18       81      84
+```
+
+
+Just note that if the program name will not include the directory, only the
+name of the executable:
+```console
+$ ./wasmtime/target/release/wasmtime out/first.wasm
+args[0]=first.wasm
+```
+Just keep this in mind when inspecting memory as it took me a while to realise
+the the directory was not expected.
+
+```
+Inputs:
+char **argv
+A pointer to a buffer to write the argument pointers.
+char *argv_buf
+A pointer to a buffer to write the argument string data.
+```
+
+Memory:
+        8-bit 16-bit 32-bit         64-bit
+         ↓    ↓       ↓               ↓
+      [00][00][00][00][00][00][00][00][00][00][00][00]...
+8-bit [ 0][ 1][ 2][ 3][ 4][ 5][ 6][ 7][ 8][ 9][10][11]...
+16-bit[  0   ][  1   ][   2  ][   3  ][   4  ][  5   ]...
+32-bit[      0       ][       1      ][      2       ]...
+64-bit[              0               ][              1             ]...
+
+
+
 ### environ_sizes_get
 The example [environ_sizes_get.wat](src/environ_sizes_get.wat) contains an 
 example of calling [__wasi_environ_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_environ_sizes_get).
@@ -395,7 +512,7 @@ Memory is linear so all memory addresses used are expressed in terms of byte
 offsets from the beginning of a memory segment
 
 ```
-i32.load alignment offset
+i32.load offset= alignment=
 ```
 Now, operators can have immediate arguments and are considered part of the
 instructions themselves.  The `alignment` is a hint of the alignment
@@ -428,7 +545,7 @@ So when we want to store a value in memory we need to specify a address
 operand
 ```
 i32.const 0                  ;; address operand
-i32.const 18                 ;; value to store
+i32.const 12                 ;; value to store
 i32.store offset=0 align=2   ;; size_buf_len
 ```
 The offset defaults to 𝟶, the alignment to the storage size of the
