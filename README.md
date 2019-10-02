@@ -170,6 +170,12 @@ $ echo $?
 2
 ```
 
+### environ_get
+The example [environ_get.wat](src/environ_get.wat) contains an of calling environ_get. 
+```
+$ ./wasmtime/target/release/wasmtime --env="ONE=1" --env="TWO=2" src/environ_get.wat
+```
+
 ### clock_res_get
 
 ### Configuration
