@@ -139,7 +139,7 @@ $ ./wasmtime/target/release/wasmtime out/first.wasm
 args[0]=first.wasm
 ```
 Just keep this in mind when inspecting memory as it took me a while to realise
-the the directory was not expected.
+that the directory was not expected.
 
 ```
 Inputs:
@@ -148,7 +148,7 @@ A pointer to a buffer to write the argument pointers.
 char *argv_buf
 A pointer to a buffer to write the argument string data.
 ```
-
+```
 Memory:
         8-bit 16-bit 32-bit         64-bit
          ↓    ↓       ↓               ↓
@@ -157,7 +157,7 @@ Memory:
 16-bit[  0   ][  1   ][   2  ][   3  ][   4  ][  5   ]...
 32-bit[      0       ][       1      ][      2       ]...
 64-bit[              0               ][              1             ]...
-
+```
 
 
 ### environ_sizes_get
