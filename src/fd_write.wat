@@ -16,9 +16,9 @@
         i32.const 9  ;; value start of the string
         i32.store    ;;
 
-        i32.const 4  ;; offset
-        i32.const 11 ;; value, the lenght of the string
-        i32.store    ;; size_buf_len
+        i32.const 4                  ;; offset
+        i32.const 11                 ;; value, the length of the string
+        i32.store offset=0 align=2   ;; size_buf_len
 
         i32.const 1  ;; 1 for stdout
         i32.const 0  ;; 0 as we stored the beginning of __wasi_ciovec_t
