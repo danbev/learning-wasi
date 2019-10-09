@@ -38,7 +38,7 @@ populate these values.
 
 The test can be run manually:
 ```console
-$ ./wasmtime/target/release/wasmtime src/args_sizes_get.wat one two three four five six
+$ wasmtime src/args_sizes_get.wat one two three four five six
 $ echo $?
 7
 ```
@@ -56,7 +56,7 @@ The example [args_get.wat](src/args_get.wat) currently hard codes everything
 and should be invoked with like this:
 :
 ```console
-$ ./wasmtime/target/release/wasmtime src/args_get.wat one two
+$ wasmtime src/args_get.wat one two
 args_get.wat
 one
 two
@@ -135,7 +135,7 @@ So
 Just note that if the program name will not include the directory, only the
 name of the executable:
 ```console
-$ ./wasmtime/target/release/wasmtime out/first.wasm
+$ wasmtime out/first.wasm
 args[0]=first.wasm
 ```
 Just keep this in mind when inspecting memory as it took me a while to realise
@@ -165,7 +165,7 @@ The example [environ_sizes_get.wat](src/environ_sizes_get.wat) contains an
 example of calling [__wasi_environ_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_environ_sizes_get).
 
 ```console
-$ ./wasmtime/target/release/wasmtime --env="ONE=1" --env="TWO=2" src/environ_sizes_get.wat
+$ wasmtime --env="ONE=1" --env="TWO=2" src/environ_sizes_get.wat
 $ echo $?
 2
 ```
@@ -173,7 +173,7 @@ $ echo $?
 ### environ_get
 The example [environ_get.wat](src/environ_get.wat) contains an of calling environ_get. 
 ```
-$ ./wasmtime/target/release/wasmtime --env="ONE=1" --env="TWO=2" src/environ_get.wat
+$ wasmtime --env="ONE=1" --env="TWO=2" src/environ_get.wat
 ```
 
 ### clock_res_get
@@ -229,6 +229,11 @@ Use the following command to build wasmtime:
 ```console
 $ RUSTFLAGS=-g CC="clang" CXX="clang++" cargo +nightly build --release
 ```
+You might need to update rust using:
+```console
+$ rustup update nightly
+```
+After this update add $WASMTIME_LOCAL_REPO/target/release/ to your PATH.
 
 ### Building wasi-libc
 ```console
