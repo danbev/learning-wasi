@@ -224,6 +224,19 @@ Add the `wasm32-wasi` target:
 $ rustup target add wasm32-wasi --toolchain nightly
 ```
 
+Troubleshooting:
+```console
+--- stderr
+error[E0463]: can't find crate for `std`
+  |
+  = note: the `wasm32-unknown-unknown` target may not be installed
+
+error: aborting due to previous error
+```
+```console
+$ rust target add wasm32-unknown-unknown --toolchain nightly
+```
+
 ### wasmtime
 Use the following command to build wasmtime:
 ```console
@@ -746,3 +759,212 @@ Now run with `DYLD_LIBRARY_PATH`
 ```console
 $ DYLD_LIBRARY_PATH=/Users/danielbevenius/work/nodejs/libuv-build/lib ./out/app
 ```
+
+### Wasmtime walkthrough
+```console
+$ lldb -- wasmtime --env="ONE=1" --env="TWO=2" src/fd_write.wat
+(lldb) target create "wasmtime"
+Current executable set to 'wasmtime' (x86_64).
+(lldb) settings set -- target.run-args  "--env=ONE=1" "--env=TWO=2" "src/fd_write.wat"
+```
+Set a breakpoint in `$wasmtime_home/src/bin/wasmtime.rs`:
+```console
+(lldb) br s -f wasmtime.rs -l 203
+```
+
+```console
+$ rustfmt --check somefile
+$ echo $?
+```
+If there where any issues the exit value will be 1.
+
+
+### Trace logging
+Can be enabled by adding `RUST_LOG`:
+```console
+RUST_LOG=wasi_common=trace cargo test socket --features wasm_tests
+```
+
+### Cranelift
+Compiler code generator backend.
+
+cranelift-codegen takes as input the intermediate language of a functions, the
+target (the arch like x86_64 for example), and compiler settings.
+The output is machine code (array of bytes that the CPU can execute) and metadata (
+
+
+### Extended static checking (ESC
+
+
+### Enarx demo walk through:
+```console
+$ lldb -- target/debug/wasmtime-basic
+(lldb) br s -f main.rs -l 31
+(lldb) r
+```
+```rust
+pub fn wasm_add_full() -> Result<ActionOutcome, ActionError> {
+    let mut binary_file = File::open(concat!(env!("OUT_DIR"), "/add.wasm")).unwrap();
+    let mut binary: Vec<u8> = Vec::new();
+    binary_file.read_to_end(&mut binary).unwrap();
+```
+So this first section is reading `add.wasm` indo a Vector.
+Next we have:
+```rust
+    // First, we need a Wasmtime context. To build one, we need to get an
+    // Instruction Set Architectures (ISA) from `cranelift_native.
+    let isa_builder = cranelift_native::builder().unwrap();
+```
+The is an Instruction Set Architecture builder that we are creating. If we
+look in the `cranelift::native` lib.rs we find the `builder` function
+This function will call the isa::lookup which can be found in
+`~/work/wasm/cranelift/cranelift-codegen/src/isa/mod.rs`.
+
+```rust
+pub fn builder() -> Result<isa::Builder, &'static str> {
+    let mut isa_builder = isa::lookup(Triple::host()).map_err(|err| match err {
+        isa::LookupError::SupportDisabled => "support for architecture disabled at compile time",
+        isa::LookupError::Unsupported => "unsupported architecture",
+    })?;
+
+    if cfg!(any(target_arch = "x86", target_arch = "x86_64")) {
+        parse_x86_cpuid(&mut isa_builder)?;
+    }
+
+    Ok(isa_builder)
+}
+```
+The call to Triple::host() will return the Triple which contains the host
+Architecture, vendor, OS. TODO: show the host specific code for `host`.
+The `host` function is found in `target-lexicon` crate
+(~/.cargo/registry/src/github.com-1ecc6299db9ec823/target-lexicon-0.9.0/src/host.rs)
+```rust
+include!(concat!(env!("OUT_DIR"), "/host.rs"));
+```
+Notice that is is reading a file from the current projects output directory:
+```console
+$ find target/ -name 'host.rs'
+target//debug/build/target-lexicon-6301a8d7cd05e389/out/host.rs
+```rust
+pub const HOST: Triple = Triple {
+    architecture: Architecture::X86_64,
+    vendor: Vendor::Apple,
+    operating_system: OperatingSystem::Darwin,
+    environment: Environment::Unknown,
+    binary_format: BinaryFormat::Macho,
+};
+```
+
+With this information `isa::lookup` will be called (~/work/wasm/cranelift/cranelift-codegen/src/isa/mod.rs):
+```rust
+pub fn lookup(triple: Triple) -> Result<Builder, LookupError> {
+    match triple.architecture {
+        Architecture::Riscv32 | Architecture::Riscv64 => isa_builder!(riscv, "riscv", triple),
+        Architecture::I386 | Architecture::I586 | Architecture::I686 | Architecture::X86_64 => {
+            isa_builder!(x86, "x86", triple)
+        }
+        Architecture::Arm { .. } => isa_builder!(arm32, "arm32", triple),
+        Architecture::Aarch64 { .. } => isa_builder!(arm64, "arm64", triple),
+        _ => Err(LookupError::Unsupported),
+    }
+}
+```
+Now, `isa_builder` is actually a macro:
+```rust
+macro_rules! isa_builder {
+    ($name: ident, $feature: tt, $triple: ident) => {{
+        #[cfg(feature = $feature)]
+        {
+            Ok($name::isa_builder($triple))
+```
+Notice that we are going go use the name `x86` in our case, which is a module
+in the isa crate (~/work/wasm/cranelift/cranelift-codegen/src/isa/x86/mod.rs):
+```rust
+pub fn isa_builder(triple: Triple) -> IsaBuilder {
+    IsaBuilder {
+        triple,
+        setup: settings::builder(),
+        constructor: isa_constructor,
+    }
+}
+```
+Lets take a closer look at IsaBuilder (~/work/wasm/cranelift/cranelift-codegen/src/isa/mod.rs).
+```rust
+pub struct Builder {
+    triple: Triple,
+    setup: settings::Builder,
+    constructor: fn(Triple, settings::Flags, settings::Builder) -> Box<dyn TargetIsa>,
+}
+```
+
+So back to the demo code we have `settings::builder()` but there is nothing
+being set.
+```rust
+    let flag_builder = settings::builder();
+    let isa = isa_builder.finish(settings::Flags::new(flag_builder));
+```
+Lets take a closer look at isa_builder.finish which will construct the target
+isa:
+```
+impl Builder {
+    /// Combine the ISA-specific settings with the provided ISA-independent settings and allocate a
+    /// fully configured `TargetIsa` trait object.
+    pub fn finish(self, shared_flags: settings::Flags) -> Box<dyn TargetIsa> {
+        (self.constructor)(self.triple, shared_flags, self.setup)
+    }
+}
+```
+So at this point we have: 
+```rust
+
+    // Then, we use the ISA to build the context.
+    let mut context = Context::with_isa(isa);
+```
+(~/work/wasm/wasmtime/crates/jit/src/lib.rs) we can find:
+```rust
+mod context;
+```
+So we can look in `~/work/wasm/wasmtime/crates/jit/src/context.rs` for the
+`with_isa` function:
+```rust
+pub struct Context {
+    namespace: Namespace,
+    compiler: Box<Compiler>,
+    global_exports: Rc<RefCell<HashMap<String, Option<wasmtime_runtime::Export>>>>,
+    debug_info: bool,
+    features: Features,
+}
+```
+
+```rust
+pub fn with_isa(isa: Box<TargetIsa>) -> Self {
+   Self::new(Box::new(Compiler::new(isa)))
+}
+```
+And the compiler crate:
+```rust
+pub struct Compiler {
+    isa: Box<dyn TargetIsa>,
+    code_memory: CodeMemory,
+    trap_registration_guards: Vec<TrapRegistrationGuard>,
+    trampoline_park: HashMap<*const VMFunctionBody, *const VMFunctionBody>,
+    signatures: SignatureRegistry,
+    strategy: CompilationStrategy,
+    /// The `FunctionBuilderContext`, shared between trampline function compilations.
+    fn_builder_ctx: FunctionBuilderContext,
+}
+```
+
+
+    // Now, we instantiate the WASM module loaded into memory.
+    let mut instance = context.instantiate_module(None, &binary).unwrap();
+
+    // And, finally, invoke our function and print the results.
+    // For this demo, all we're doing is adding 5 and 7 together.
+    let args = [RuntimeValue::I32(5), RuntimeValue::I32(7)];
+    context.invoke(&mut instance, "add", &args)
+}
+```
+
+### Instruction Set Architectures (ISA)
+
