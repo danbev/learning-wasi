@@ -255,8 +255,10 @@ $ make WASM_CC=/usr/local/opt/llvm/bin/clang WASM_AR=/usr/local/opt/llvm/bin/llv
 #
 # The build succeeded! The generated sysroot is in /Users/danielbevenius/work/wasi/wasi-libc/sysroot.
 #
-
 ```
+Specifying a --sysroot=/somedir when building will make the compiler look for headers and
+libraries in /somedir/include and /somedir/lib.
+
 Download [libclang_rt.builtins-wasm32.a](https://github.com/jedisct1/libclang_rt.builtins-wasm32.a)
 and copy it to the wasi lib:
 ```console
@@ -421,7 +423,11 @@ const memory = new WebAssembly.Memory({initial:10, maximum:100});
 So here we are saying that we want an initial size of 640KiB.
 
 ### musl
-A libc implementation. Pronounced muscle.
+Is a libc implementation just like glibc. Pronounced muscle.
+Musl uses less space compared to glibc and is written with security in mind.
+So applications could be compiled against either glibc or musl. So how to
+we compile a program against musl? 
+
 
 ### Building llvm
 ```console
