@@ -198,6 +198,7 @@ For compilers to find llvm you may need to set:
   export CPPFLAGS="-I/usr/local/opt/llvm/include"
 ```
 
+Find the targets that 
 ```console
 $ /usr/local/opt/llvm/bin/llc --version
 LLVM (http://llvm.org/):
@@ -213,6 +214,10 @@ LLVM (http://llvm.org/):
     ...
 ```
 So this looks pretty good to me, we have `wasm32` and `wasm64`.
+
+
+### Target triples
+
 
 #### Install Rust using rustup:
 ```console
@@ -248,16 +253,31 @@ $ rustup update nightly
 ```
 After this update add $WASMTIME_LOCAL_REPO/target/release/ to your PATH.
 
+
+### Building wasi-sdk
+```console
+$ git clone https://github.com/CraneStation/wasi-sdk.git
+$ git submodule init
+$ git submodule update
+```
+
 ### Building wasi-libc
 ```console
+$ git clone https://github.com/CraneStation/wasi-libc.git
+$ git submodule init
+$ git submodule update
 $ make WASM_CC=/usr/local/opt/llvm/bin/clang WASM_AR=/usr/local/opt/llvm/bin/llvm-ar WASM_NM=/usr/local/opt/llvm/bin/llvm-nm
 ...
 #
 # The build succeeded! The generated sysroot is in /Users/danielbevenius/work/wasi/wasi-libc/sysroot.
 #
 ```
-Specifying a --sysroot=/somedir when building will make the compiler look for headers and
-libraries in /somedir/include and /somedir/lib.
+Specifying a `--sysroot=/somedir` when building will make the compiler look for headers and
+libraries in /somedir/include and /somedir/lib. So we will want to specify this
+sysroot that was created above when compiling:
+```console
+$ clang --sysroot=/opt/wasi-sdk/ --target=wasm32-unknown-wasi -o module.wasm 
+```
 
 Download [libclang_rt.builtins-wasm32.a](https://github.com/jedisct1/libclang_rt.builtins-wasm32.a)
 and copy it to the wasi lib:
@@ -429,13 +449,78 @@ So applications could be compiled against either glibc or musl. So how to
 we compile a program against musl? 
 
 
-### Building llvm
+### Building llvm with WebAssembly target
+Clone [llvm-project](llvm-project).
+
 ```console
-$ mkdir build
-$ cd build
-$ cmake -G Ninja -DCMAKE_INSTALL_PREFIX=/opt/llvm-dist/ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi" ../llvm
-$ ninja
-$ ninja dist
+$ git clone https://github.com/llvm/llvm-project.git
+$ cd llvm-project
+$ mkdir build && cd build
+```
+
+Default build
+```console
+$ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD=WebAssembly -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi ../llvm
+$ make -j8  
+$ make install
+```
+
+The installation will be placed in /home/dbeveniu/opt. With this installed
+we should be able to compile and specify the output target as wasm.
+
+Generate llvm intermediate representation (IR):
+```console
+$ ~/opt/bin/clang --target=wasm32 -emit-llvm -c -S src/add.c
+```
+
+Compile the IR:
+```console
+$ ~/opt/bin/llc -march=wasm32 -filetype=obj add.ll
+```
+The above will produce an object file named `add.o`. This need to be linked
+into a wasm module using `wasm-ld`:
+```console
+$ wasm-ld --no-entry --export-all -o add.wasm add.o
+```
+We can run this using node:
+```console
+$ node src/add.js
+10 + 20 = 30
+```
+
+
+Only web assembly stuff:
+```console
+$ cmake -G Ninja \                                         
+        -DCMAKE_BUILD_TYPE=MinSizeRel \                                 
+        -DCMAKE_INSTALL_PREFIX=~/opt \                              
+        -DLLVM_TARGETS_TO_BUILD=WebAssembly \                           
+        -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi \                      
+        -DLLVM_ENABLE_PROJECTS="lld;clang;clang-tools-extra" \          
+        -DDEFAULT_SYSROOT=~/opt/share/wasi-sysroot \                
+        -DLLVM_INSTALL_BINUTILS_SYMLINKS=TRUE \                         
+        ../llvm
+
+$ ninja $(NINJA_FLAGS) -v -C build/llvm \                                 
+        install-clang \                                                 
+        install-clang-format \                                          
+        install-clang-tidy \                                            
+        install-clang-apply-replacements \                              
+        install-lld \                                                   
+        install-llvm-ranlib \                                           
+        install-llvm-strip \                                            
+        install-llvm-dwarfdump \                                        
+        $(if $(patsubst 8.%,,$(CLANG_VERSION)),install-clang-resource-headers,install-clang-headers) \
+        install-ar \                                                    
+        install-ranlib \                                                
+        install-strip \                                                 
+        install-nm \                                                    
+        install-size \                                                  
+        install-strings \                                               
+        install-objdump \                                               
+        install-objcopy \                                               
+        install-c++filt \                                               
+        llvm-config              
 ```
 
 ### Installing ninja
