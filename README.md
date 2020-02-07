@@ -460,7 +460,7 @@ $ mkdir build && cd build
 
 Default build
 ```console
-$ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD=WebAssembly -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi ../llvm
+$ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD=WebAssembly -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi -DDEFAULT_SYSROOT=/home/dbeveniu/opt/share/wasi-sysroot ../llvm
 $ make -j8  
 $ make install
 ```
@@ -488,39 +488,53 @@ $ node src/add.js
 10 + 20 = 30
 ```
 
+So the above allowed us to compile from c and output assembly. But that does
+not allow us to use wasi. 
 
-Only web assembly stuff:
+For this we need a wasi-libc.
+
+### wasi-libc
+This is a c library just like glibc. 
+
 ```console
-$ cmake -G Ninja \                                         
-        -DCMAKE_BUILD_TYPE=MinSizeRel \                                 
-        -DCMAKE_INSTALL_PREFIX=~/opt \                              
-        -DLLVM_TARGETS_TO_BUILD=WebAssembly \                           
-        -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi \                      
-        -DLLVM_ENABLE_PROJECTS="lld;clang;clang-tools-extra" \          
-        -DDEFAULT_SYSROOT=~/opt/share/wasi-sysroot \                
-        -DLLVM_INSTALL_BINUTILS_SYMLINKS=TRUE \                         
-        ../llvm
+$ git clone https://github.com/CraneStation/wasi-libc.git
+$ git submodule init
+$ git submodule update
+$ make WASM_CC=~/opt/bin/clang WASM_AR=~/opt/bin/llvm-ar WASM_NM=~/opt/bin/llvm-nm SYSROOT=~/opt/share/wasi-sysroot 
+...
+#
+# The build succeeded! The generated sysroot is in /home/dbeveniu/opt/share/wasi-sysroot.
+#
+```
+Specifying a `--sysroot=/somedir` when building will make the compiler look for headers and
+libraries in /somedir/include and /somedir/lib. So we will want to specify this
+sysroot that was created above when compiling:
 
-$ ninja $(NINJA_FLAGS) -v -C build/llvm \                                 
-        install-clang \                                                 
-        install-clang-format \                                          
-        install-clang-tidy \                                            
-        install-clang-apply-replacements \                              
-        install-lld \                                                   
-        install-llvm-ranlib \                                           
-        install-llvm-strip \                                            
-        install-llvm-dwarfdump \                                        
-        $(if $(patsubst 8.%,,$(CLANG_VERSION)),install-clang-resource-headers,install-clang-headers) \
-        install-ar \                                                    
-        install-ranlib \                                                
-        install-strip \                                                 
-        install-nm \                                                    
-        install-size \                                                  
-        install-strings \                                               
-        install-objdump \                                               
-        install-objcopy \                                               
-        install-c++filt \                                               
-        llvm-config              
+```console
+$ clang --sysroot=/opt/wasi-sdk/ --target=wasm32-unknown-wasi -o module.wasm 
+```
+
+But we also need a compiler-rt:
+
+```console
+$ mkdir compiler-rt && cd compiler-rt
+$ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE=../../wasi-sdk.cmake -DCOMPILER_RT_BAREMETAL_BUILD=On -DCOMPILER_RT_BUILD_XRAY=OFF -DCOMPILER_RT_INCLUDE_TESTS=OFF -DCOMPILER_RT_HAS_FPIC_FLAG=OFF -DCOMPILER_RT_ENABLE_IOS=OFF -DCOMPILER_RT_DEFAULT_TARGET_ONLY=On -DWASI_SDK_PREFIX=/home/dbeveniu/opt -DCMAKE_C_FLAGS="-O1" -DLLVM_CONFIG_PATH=../bin/llvm-config -DCOMPILER_RT_OS_DIR=wasi -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt/lib/clang/11.0.0/ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON ../../compiler-rt/lib/builtins
+
+$ make -j8
+$ make install
+/usr/bin/cmake -P cmake_install.cmake
+-- Install configuration: "RelWithDebInfo"
+-- Installing: /home/dbeveniu/opt/lib/clang/11.0.0/lib/wasi/libclang_rt.builtins-wasm32.a
+```
+
+With this in place we should be able to compile a c source code into wasi:
+```console
+$ clang --target=wasm32-unknown-wasi --sysroot=/home/dbeveniu/opt/share/wasi-sysroot -nostdlib -Wl,--no-entry -Wl,--export-all -o add.wasm src/add.c
+```
+And we can try it out with the same node.js code as above:
+```console
+$ node src/add.js 
+10 + 20 = 30
 ```
 
 ### Installing ninja
