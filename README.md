@@ -516,6 +516,12 @@ $ clang --sysroot=/opt/wasi-sdk/ --target=wasm32-unknown-wasi -o module.wasm
 
 But we also need a compiler-rt:
 
+### compiler-rt
+builtins:
+```
+a simple library that provides an implementation of the low-level target-specific hooks required by code generation and other runtime components. For example, when compiling for a 32-bit target, converting a double to a 64-bit unsigned integer is compiling into a runtime call to the "__fixunsdfdi" function. The builtins library provides optimized implementations of this and other low-level routines, either in target-independent C form, or as a heavily-optimized assembly.
+```
+
 ```console
 $ mkdir compiler-rt && cd compiler-rt
 $ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE=../../wasi-sdk.cmake -DCOMPILER_RT_BAREMETAL_BUILD=On -DCOMPILER_RT_BUILD_XRAY=OFF -DCOMPILER_RT_INCLUDE_TESTS=OFF -DCOMPILER_RT_HAS_FPIC_FLAG=OFF -DCOMPILER_RT_ENABLE_IOS=OFF -DCOMPILER_RT_DEFAULT_TARGET_ONLY=On -DWASI_SDK_PREFIX=/home/dbeveniu/opt -DCMAKE_C_FLAGS="-O1" -DLLVM_CONFIG_PATH=../bin/llvm-config -DCOMPILER_RT_OS_DIR=wasi -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt/lib/clang/11.0.0/ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON ../../compiler-rt/lib/builtins
