@@ -521,6 +521,10 @@ builtins:
 ```
 a simple library that provides an implementation of the low-level target-specific hooks required by code generation and other runtime components. For example, when compiling for a 32-bit target, converting a double to a 64-bit unsigned integer is compiling into a runtime call to the "__fixunsdfdi" function. The builtins library provides optimized implementations of this and other low-level routines, either in target-independent C form, or as a heavily-optimized assembly.
 ```
+So lets say you have a division of a long long and on a 32 bit system there
+might not be an instruction for this. In cases like this instead that instruction
+will be replaced with an call to a function from the compiler-rt library.
+TODO: Add an example of this.
 
 ```console
 $ mkdir compiler-rt && cd compiler-rt
