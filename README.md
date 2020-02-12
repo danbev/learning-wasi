@@ -267,6 +267,7 @@ $ git clone https://github.com/CraneStation/wasi-libc.git
 $ git submodule init
 $ git submodule update
 $ make WASM_CC=/usr/local/opt/llvm/bin/clang WASM_AR=/usr/local/opt/llvm/bin/llvm-ar WASM_NM=/usr/local/opt/llvm/bin/llvm-nm
+$ make WASM_CC=/home/danielbevenius/opt/bin/clang WASM_AR=/home/danielbevenius/opt/bin/llvm-ar WASM_NM=/home/danielbevenius/opt/bin/llvm-nm
 ...
 #
 # The build succeeded! The generated sysroot is in /Users/danielbevenius/work/wasi/wasi-libc/sysroot.
@@ -612,6 +613,106 @@ Notice that there are a number of functions and symboles that we did not
 add, infact we only have one function named `add`.
 When is this added?  
 If we just generate the IR from add.c we get:
+
+Generate only the object file add.o:
+```console
+/home/danielbevenius/opt/bin/clang-11 "-cc1" "-triple" "wasm32-unknown-wasi" "-emit-obj" "-mrelax-all" "-disable-free" "-main-file-name" "add.c" "-mrelocation-model" "static" "-mthread-model" "posix" "-mframe-pointer=none" "-fno-rounding-math" "-masm-verbose" "-mconstructor-aliases" "-target-cpu" "generic" "-fvisibility" "hidden" "-dwarf-column-info" "-debugger-tuning=gdb" "-resource-dir" "/home/danielbevenius/opt/lib/clang/11.0.0" "-isysroot" "/home/dbeveniu/opt/share/wasi-sysroot" "-internal-isystem" "/home/danielbevenius/opt/lib/clang/11.0.0/include" "-internal-isystem" "/home/dbeveniu/opt/share/wasi-sysroot/include/wasm32-wasi" "-internal-isystem" "/home/dbeveniu/opt/share/wasi-sysroot/include" "-fdebug-compilation-dir" "/home/danielbevenius/work/wasm/learning-wasi" "-ferror-limit" "19" "-fmessage-length" "0" "-fgnuc-version=4.2.1" "-fobjc-runtime=gnustep" "-fno-common" "-fdiagnostics-show-option" "-fcolor-diagnostics" "-o" "add.o" "-x" "c" "src/add.c"
+```
+Then we can launch the the wasm linker and debug it:
+```console
+gdb --args /home/danielbevenius/opt/bin/wasm-ld "-L/home/dbeveniu/opt/share/wasi-sysroot/lib/wasm32-wasi" "--no-entry" "--export-all" "add.o" "-o" "add.wasm"
+(gdb) b main
+r
+```
+This will break in `lld/tools/lld/lld.cpp` which is a executable what contains
+4 linkers. A ELF, COFF, WebAssembly, and a Mach-O linker. The name of the executable
+run, in our case this is `wasm-ld`:
+```console
+(gdb) p argv[0]
+$3 = 0x7fffffffd877 "/home/danielbevenius/opt/bin/wasm-ld"
+```
+Notice that `wasm-ls` is a lin to `lld`:
+```console
+lrwxrwxrwx. 1 danielbevenius danielbevenius 3 Feb 11 15:39 /home/danielbevenius/opt/bin/wasm-ld -> lld
+```
+This will be matched against the Flavor `Wasm` using the `getFlavor` function.
+And this is what the switch case will match:
+```c++
+case Wasm:                                                                    
+    return !wasm::link(args, canExitEarly(), llvm::outs(), llvm::errs()); 
+```
+`wasm::link` can be found in `lld/wasm/Driver.cpp`
+```console
+(gdb) b Driver.cpp:83
+```
+Which will call LinkerDriver().link(args) which can be found in the same
+file `LinkerDriver::link`:
+```c++
+  ...
+  createSyntheticSymbols();  
+```
+This is what will create the additional functions. For example, it will
+create a synthetic function named `__wasm_call_ctor`.
+There are others but I'm going to focus on this one.
+So where will be a function added named `__wasm_call_ctor` and this will be
+called by `_start`:
+```c
+extern void __wasm_call_ctors(void);                                            
+                                                                                
+void _start(void) {                                                             
+    // The linker synthesizes this to call constructors.                        
+    __wasm_call_ctors();    
+    ...
+}
+```
+
+In LinkDriver::link we find the following function call:
+```c++
+readConfigs(args);  
+...
+config->entry = getEntry(args);
+```
+In our case, we passed in --no-entry so this will be "":
+```c++
+ if (arg->getOption().getID() == OPT_no_entry)                                 
+    return "";      
+```
+
+Note about llvm targets:
+When you build llvm you specify the targets it should build. This will
+generated a file named `build/include/llvm/Config/Targets.def`.
+```console
+LLVM_TARGET(WebAssembly)                                                        
+```
+The wasm Driver will call `initLLVM` which 
+```c++
+static void initLLVM() {
+  InitializeAllTargets();
+  ...
+}
+
+inline void InitializeAllTargets() {
+  // FIXME: Remove this, clients should do it.
+  InitializeAllTargetInfos();
+
+inline void InitializeAllTargetInfos() {                                         
+  #define LLVM_TARGET(TargetName) LLVMInitialize##TargetName##TargetInfo();          
+  #include "llvm/Config/Targets.def"                                                 
+}                                                                                
+````
+So this will be expanded by the preprocessor to:
+```c++
+LLVMInitializeWebAssemblyTargetInfo();          
+```
+
+
+
+
+When InitializeAllTargetInfos is called this file will be included
+
+
+
+
 ```console
 $ clang -S -emit-llvm --target=wasm32-unknown-wasi --sysroot=/home/dbeveniu/opt/share/wasi-sysroot -nostdlib src/add.c
 ```
