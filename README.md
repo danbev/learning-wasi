@@ -537,7 +537,7 @@ TODO: Add an example of this.
 
 ```console
 $ mkdir compiler-rt && cd compiler-rt
-$ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE=../../wasi-sdk.cmake -DCOMPILER_RT_BAREMETAL_BUILD=On -DCOMPILER_RT_BUILD_XRAY=OFF -DCOMPILER_RT_INCLUDE_TESTS=OFF -DCOMPILER_RT_HAS_FPIC_FLAG=OFF -DCOMPILER_RT_ENABLE_IOS=OFF -DCOMPILER_RT_DEFAULT_TARGET_ONLY=On -DWASI_SDK_PREFIX=/home/dbeveniu/opt -DCMAKE_C_FLAGS="-O1" -DLLVM_CONFIG_PATH=../bin/llvm-config -DCOMPILER_RT_OS_DIR=wasi -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt/lib/clang/11.0.0/ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON ../../compiler-rt/lib/builtins
+$ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE=../../wasi-sdk.cmake -DCOMPILER_RT_BAREMETAL_BUILD=On -DCOMPILER_RT_BUILD_XRAY=OFF -DCOMPILER_RT_INCLUDE_TESTS=OFF -DCOMPILER_RT_HAS_FPIC_FLAG=OFF -DCOMPILER_RT_ENABLE_IOS=OFF -DCOMPILER_RT_DEFAULT_TARGET_ONLY=On -DWASI_SDK_PREFIX=/home/danielbevenius/opt -DCMAKE_C_FLAGS="-O1" -DLLVM_CONFIG_PATH=../bin/llvm-config -DCOMPILER_RT_OS_DIR=wasi -DCMAKE_INSTALL_PREFIX=/home/danielbevenius/opt/lib/clang/11.0.0/ -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON ../../compiler-rt/lib/builtins
 
 $ make -j8
 $ make install
@@ -616,7 +616,7 @@ If we just generate the IR from add.c we get:
 
 Generate only the object file add.o:
 ```console
-/home/danielbevenius/opt/bin/clang-11 "-cc1" "-triple" "wasm32-unknown-wasi" "-emit-obj" "-mrelax-all" "-disable-free" "-main-file-name" "add.c" "-mrelocation-model" "static" "-mthread-model" "posix" "-mframe-pointer=none" "-fno-rounding-math" "-masm-verbose" "-mconstructor-aliases" "-target-cpu" "generic" "-fvisibility" "hidden" "-dwarf-column-info" "-debugger-tuning=gdb" "-resource-dir" "/home/danielbevenius/opt/lib/clang/11.0.0" "-isysroot" "/home/dbeveniu/opt/share/wasi-sysroot" "-internal-isystem" "/home/danielbevenius/opt/lib/clang/11.0.0/include" "-internal-isystem" "/home/dbeveniu/opt/share/wasi-sysroot/include/wasm32-wasi" "-internal-isystem" "/home/dbeveniu/opt/share/wasi-sysroot/include" "-fdebug-compilation-dir" "/home/danielbevenius/work/wasm/learning-wasi" "-ferror-limit" "19" "-fmessage-length" "0" "-fgnuc-version=4.2.1" "-fobjc-runtime=gnustep" "-fno-common" "-fdiagnostics-show-option" "-fcolor-diagnostics" "-o" "add.o" "-x" "c" "src/add.c"
+/home/danielbevenius/opt/bin/clang-11 "-cc1" "-triple" "wasm32-unknown-wasi" "-emit-obj" "-mrelax-all" "-disable-free" "-main-file-name" "add.c" "-mrelocation-model" "static" "-mthread-model" "posix" "-mframe-pointer=none" "-fno-rounding-math" "-masm-verbose" "-mconstructor-aliases" "-target-cpu" "generic" "-fvisibility" "hidden" "-dwarf-column-info" "-debugger-tuning=gdb" "-resource-dir" "/home/danielbevenius/opt/lib/clang/11.0.0" "-isysroot" "/home/danielbevenius/opt/share/wasi-sysroot" "-internal-isystem" "/home/danielbevenius/opt/lib/clang/11.0.0/include" "-internal-isystem" "/home/danielbevenius/opt/share/wasi-sysroot/include/wasm32-wasi" "-internal-isystem" "/home/danielbevenius/opt/share/wasi-sysroot/include" "-fdebug-compilation-dir" "/home/danielbevenius/work/wasm/learning-wasi" "-ferror-limit" "19" "-fmessage-length" "0" "-fgnuc-version=4.2.1" "-fobjc-runtime=gnustep" "-fno-common" "-fdiagnostics-show-option" "-fcolor-diagnostics" "-o" "add.o" "-x" "c" "src/add.c"
 ```
 Then we can launch the the wasm linker and debug it:
 ```console
@@ -665,6 +665,7 @@ void _start(void) {
     ...
 }
 ```
+Now, `_start` is define in wasi-libc but when we ran this 
 
 In LinkDriver::link we find the following function call:
 ```c++
@@ -806,6 +807,31 @@ It seems that after upgrading to Mojove some headers were no longer in the `/inc
 directory. These can be installed using the following command:
 ```console
 open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
+```
+
+```console
+signalhandlers/SignalHandlers.hpp:5:10: fatal error: 'setjmp.h' file not found
+signalhandlers/SignalHandlers.hpp:5:10: fatal error: 'setjmp.h' file not found, err: true
+thread 'main' panicked at 'Unable to generate bindings: ()', /home/danielbevenius/.cargo/git/checkouts/wasmtime-5c699c1a3ee5d368/b7d86af/wasmtime-runtime/build.rs:32:5
+```
+You can trouble shoot this by creating a directory and generating the cmake
+build files:
+```console
+$ mkdir tmp && cd tmp
+$ cmake "/home/danielbevenius/.cargo/git/checkouts/wasmtime-5c699c1a3ee5d368/b7d86af/wasmtime-runtime/signalhandlers" "-DCMAKE_INSTALL_PREFIX=/home/danielbevenius/work/openshift/faas-wasi-runtime-image/target/debug/build/wasmtime-runtime-a5693ecd59b8474f/out" "-DCMAKE_C_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64 -I/usr/include" "-DCMAKE_C_COMPILER=/usr/bin/cc" "-DCMAKE_CXX_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64 -I/usr/include" "-DCMAKE_CXX_COMPILER=/usr/bin/c++" "-DCMAKE_BUILD_TYPE=Debug"
+```
+Then we can run the command the failed:
+```console
+$ "cmake" "--build" "." "--target" "install" "--config" "Debug" "--"
+```
+This actually succeeded. 
+
+Looking closer at the error message you can see that it is saying the it failed
+when running rustc on wasm-runtime/build.rs. I've build rustc manually and it
+is installed in a non-default location.
+So this can be worked around by specifying:
+```console
+$ export BINDGEN_EXTRA_CLANG_ARGS="-I/usr/include"
 ```
 
 
