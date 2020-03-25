@@ -1,23 +1,26 @@
-LLVM_HOME=/usr/local/opt/llvm
+LLVM_HOME=~/opt
 LLVM_BIN=${LLVM_HOME}/bin
+WASI_SYSROOT=${LLVM_HOME}/share/wasi-sysroot
+WASMTIME=~/work/wasm/wasmtime/target/release/wasmtime
+TRIPLE=wasm32-wasi
 
 out/first.wasm: src/first.c | out
-	${LLVM_BIN}/clang --target=wasm32-wasi --sysroot ./wasi-libc/sysroot -O2 -s -o out/first.wasm $<
+	${LLVM_BIN}/clang --target=${TRIPLE} --sysroot ${WASI_SYSROOT} -O2 -s -o out/first.wasm $<
 
 out: 
 	@mkdir $@
 
 .PHONY: run
 run:
-	RUST_BACKTRACE=1 wasmtime/target/release/wasmtime out/first.wasm
+	RUST_BACKTRACE=1 ${WASMTIME} out/first.wasm
 
 .PHONY: fd_write
 fd_write:
-	@wasmtime/target/release/wasmtime src/$@.wat
+	@${WASMTIME} src/$@.wat
 
 .PHONY: args_sizes_get
 args_sizes_get:
-	@wasmtime/target/release/wasmtime src/$@.wat arg1 arg2 arg3
+	@${WASMSTIME} src/$@.wat arg1 arg2 arg3
 	@echo "status:$?"
 
 .PHONY: clean
