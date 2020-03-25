@@ -253,6 +253,23 @@ $ rustup update nightly
 ```
 After this update add $WASMTIME_LOCAL_REPO/target/release/ to your PATH.
 
+### Building the examples
+After building clang with wasm/wasi support this project can be build using
+make or cmake. The path to the directory where llvm and the wasi-sysroot can
+be updated in the Makefile/CMakeList.txt. 
+
+To compile src/first.c and then run using wasmtime using make:
+```console
+$ make
+$ make run
+```
+
+To compile src/first.c using cmake:
+```console
+$ mkdir build
+$ cmake ..
+$ make
+```
 
 ### Building wasi-sdk
 ```console
