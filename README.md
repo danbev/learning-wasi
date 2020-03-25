@@ -461,7 +461,7 @@ $ mkdir build && cd build
 
 Default build
 ```console
-$ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD=WebAssembly -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi -DDEFAULT_SYSROOT=/home/dbeveniu/opt/share/wasi-sysroot ../llvm
+$ cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/home/dbeveniu/opt -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra;libcxx;libcxxabi;lldb" -DLLVM_TARGETS_TO_BUILD=WebAssembly -DLLVM_DEFAULT_TARGET_TRIPLE=wasm32-wasi -DDEFAULT_SYSROOT=/home/dbeveniu/opt/share/wasi-sysroot ../llvm
 $ make -j8  
 $ make install
 ```
@@ -849,8 +849,6 @@ or
 Make sure you have specifed the correct --sysroot.
 
 
-
-
 ### Wasm modules
 Sections in a module
 ```
@@ -869,13 +867,13 @@ Sections in a module
 
 #### Types section
 Are function signatures that can be reused, for example for imports, functions
-definitaions.
+definitions.
 
 #### Table section
 This maps values like JavaScript objects or OS file handles. Its a way to
 allow the wasm module to access something outside its memory. For example, say
-you have a function pointer which we want to call from our wasm module. If we 
-had direct access to this memory pointer we might be able to learn about the 
+you have a function pointer which you want to call from wasm module. If you 
+had direct access to this memory pointer you might be able to learn about the 
 memory layout and exploit it. For example, updating the pointer to something
 different might execute some other piece of code.
 A table is an array that lives outside of wasm's memory and the values stored
@@ -897,7 +895,7 @@ size. This memory can be initialized by the data section.
 This section contains any global (think static C variables).
 
 ### Export section
-This are functions, tables, memory segements and global variables that are made
+These are functions, tables, memory segements and global variables that are made
 available to the host.
 
 
@@ -973,10 +971,6 @@ Unlike with other index spaces, indexing of labels is relative by nesting
 depth, that is, label 0 refers to the innermost structured control instruction
 enclosing the referring branch instruction, while increasing indices refer to
 those farther out. 
-
-
-
-
 
 ### libuv Wasi (uvwasi)
 ```c
@@ -1165,11 +1159,10 @@ Compiler code generator backend.
 
 cranelift-codegen takes as input the intermediate language of a functions, the
 target (the arch like x86_64 for example), and compiler settings.
-The output is machine code (array of bytes that the CPU can execute) and metadata (
+The output is machine code.
 
 
-### Extended static checking (ESC
-
+### Extended static checking (ESC)
 
 ### Enarx demo walk through:
 ```console
