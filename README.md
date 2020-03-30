@@ -277,6 +277,9 @@ $ git clone https://github.com/CraneStation/wasi-sdk.git
 $ git submodule init
 $ git submodule update
 ```
+I've also [downloaded](https://github.com/WebAssembly/wasi-sdk/releases) and
+unpacked these locally as this is quicker than having to build llvm-project.
+This is what I specify in the Makefile as the `LLVM_HOME`.
 
 ### Building wasi-libc
 ```console
