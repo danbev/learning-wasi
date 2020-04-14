@@ -1,5 +1,6 @@
 ### Learning Web Assembly System Interface (WASI)
 This project is a collection of notes and examples to help me understand WASI
+and WASM.
 
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
@@ -1356,3 +1357,16 @@ pub struct Compiler {
 
 ### Instruction Set Architectures (ISA)
 
+
+### Threads
+WebWorkers rely on message passing for communication, and in V8 each worker is
+a separate Isolate and they don't share compiled code or JavaScript objects with
+each other.
+WASM threads can share the same wasm memory using an underlying SharedArrayBuffer.
+Each wasm thread runs in a WebWorker but they share their memory allows them to
+work like a normal pthreads application would. 
+
+### Anyref
+```console
+$ wat2wasm --enable-reference-types src/anyref.wat -o anyref.wasm
+```
