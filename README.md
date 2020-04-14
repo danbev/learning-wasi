@@ -1370,3 +1370,19 @@ work like a normal pthreads application would.
 ```console
 $ wat2wasm --enable-reference-types src/anyref.wat -o anyref.wasm
 ```
+```console
+$ node --experimental-wasm-anyref src/anyref.js
+```
+
+
+### Multi-Value return
+Currently a wasm function can only return zero or one value.
+
+The following example demonstrates how a function that return multiple values
+can be called:
+```console
+$ wat2wasm --enable-multi-value src/multivalue.wat -o multivalue.wasm
+```
+```console
+$ node --experimental-wasm-mv src/multivalue.js
+```
