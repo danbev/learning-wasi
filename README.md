@@ -1386,3 +1386,16 @@ $ wat2wasm --enable-multi-value src/multivalue.wat -o multivalue.wasm
 ```console
 $ node --experimental-wasm-mv src/multivalue.js
 ```
+
+### Exception Handling
+Some languages use exceptions, like C++ or C# and these can be polifilled but
+this impacts performance. Also JavaScript has exceptions and so if a wasm function
+calls a JS function which throws an error the wasm module will not be able to
+handle the error.
+
+```console
+$ wat2wasm --enable-exceptions src/exception.wat -o exception.wasm
+```
+```console
+$ node --experimental-wasm-anyref --experimental-wasm-eh src/exception.js
+```multivalue
