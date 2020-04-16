@@ -1342,8 +1342,6 @@ pub struct Compiler {
     /// The `FunctionBuilderContext`, shared between trampline function compilations.
     fn_builder_ctx: FunctionBuilderContext,
 }
-```
-
 
     // Now, we instantiate the WASM module loaded into memory.
     let mut instance = context.instantiate_module(None, &binary).unwrap();
