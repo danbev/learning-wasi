@@ -1373,6 +1373,8 @@ $ wat2wasm --enable-reference-types src/anyref.wat -o anyref.wasm
 ```console
 $ node --experimental-wasm-anyref src/anyref.js
 ```
+This js example can be found in [anyref.js](./src/anyref.js) and the wat in
+[anyref.wat](./src/anyref.wat)
 
 
 ### Multi-Value return
@@ -1386,6 +1388,8 @@ $ wat2wasm --enable-multi-value src/multivalue.wat -o multivalue.wasm
 ```console
 $ node --experimental-wasm-mv src/multivalue.js
 ```
+This js example can be found in [multivalue.js](./src/multivalue.js) and the wat
+in [multvalue.wat](./src/multivalue.wat)
 
 ### Exception Handling
 Some languages use exceptions, like C++ or C# and these can be polifilled but
@@ -1399,3 +1403,5 @@ $ wat2wasm --enable-exceptions src/exception.wat -o exception.wasm
 ```console
 $ node --experimental-wasm-anyref --experimental-wasm-eh src/exception.js
 ```
+This js example can be found in [exception.js](./src/exception.js) and the wat
+in [exception.wat](./src/exception.wat).
