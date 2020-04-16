@@ -1398,4 +1398,4 @@ $ wat2wasm --enable-exceptions src/exception.wat -o exception.wasm
 ```
 ```console
 $ node --experimental-wasm-anyref --experimental-wasm-eh src/exception.js
-```multivalue
+```
