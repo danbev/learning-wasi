@@ -1361,8 +1361,10 @@ WebWorkers rely on message passing for communication, and in V8 each worker is
 a separate Isolate and they don't share compiled code or JavaScript objects with
 each other.
 WASM threads can share the same wasm memory using an underlying SharedArrayBuffer.
-Each wasm thread runs in a WebWorker but they share their memory allows them to
-work like a normal pthreads application would. 
+Each wasm thread runs in a WebWorker but they share their memory which allows
+them to work like a normal pthreads application would. 
+
+TODO: Add an example...
 
 ### Anyref
 ```console
