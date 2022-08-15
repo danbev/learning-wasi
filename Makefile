@@ -10,6 +10,9 @@ out/first.wasm: src/first.c | out
 out/firstcxx.wasm: src/first.cc | out
 	${LLVM_BIN}/clang++ -v -std=c++11 --target=${TRIPLE} --sysroot ${WASI_SYSROOT} -O2 -s -o out/firstcxx.wasm $<
 
+out/%.wasm: src/%.wat | out
+	wat2wasm -v -o $@ $<
+
 out: 
 	@mkdir $@
 
