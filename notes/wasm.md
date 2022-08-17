@@ -46,9 +46,9 @@ there are no more subexpressions the `i32.add` expression will be evaulated and
 the arguments it takes are now on the stack which can be popped off.
 So the order would be like this:
 ```
-  local.get 0
-  i32.const 2
-  i32.add
+  local.get 0   ;; stack [5]
+  i32.const 2   ;; stack [2, 5]
+  i32.add       ;; stack [7]
 ```
 
 The following is an example where two local variables are used:
