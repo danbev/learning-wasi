@@ -12,6 +12,14 @@
   ;)
   ;; naming parameters is optional and the indexes can b used.
   (func $add2(param i32 i32) (result i32)
+	(if (i32.eq (local.get 0) (i32.const 0))
+	  (then
+	    nop
+	  )
+	  (else
+	    nop
+	  )
+	)
 	(i32.add (local.get 0) (local.get 1))
   )
   (export "add" (func $add))
