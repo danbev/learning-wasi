@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs');
-const buffer = fs.readFileSync('add.wasm');
+const buffer = fs.readFileSync('out/add.wasm');
 
 WebAssembly.validate(buffer);
 
