@@ -29,6 +29,23 @@ will be pushed onto the stack. The advantages of are that stack machines have a
 small binary size and efficient instruction coding, plus ease of portability.
 The JVM is an example of a stack machine and also .NET Common Languate Runtime.
 
+So, in a .wat file we may have something like this:
+```wat
+	(i32.add
+          (local.get 0)
+          (i32.const 2)
+        )
+```
+The order in how instructions get evaulated is that when the `i32.add`
+expression is 'entered' it will see if there are any subexpressions and evaluate
+them first.
+
+The `local.get` instruction will retrieve the first argument and push that onto
+the stack. The following argument will push a constant onto the stack. Since
+there are no more subexpressions the `i32.add` expression will be evaulated and
+the arguments it takes are now on the stack which can be popped off.
+
+
 ### Data types
 There are only 4:
 ```
@@ -79,4 +96,45 @@ It looks like this instruction was
 [renamed](https://github.com/WebAssembly/wabt/commit/052d2864ec4cc45a3aca4bab1a833d1cc45e29d6)
 (along with others) for consistency so `get_local` was the old name and the new
 name is `local.get`.
+
+### wasm-objdump
+```console
+$ wasm-objdump -x out/add.wasm 
+
+add.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] (i32, i32) -> i32          ;; type that excepts two i32 params and returns a i32
+Function[2]:                          ;; functions defined
+ - func[0] sig=0 <add>                ;; references type 0 (sig=0)
+ - func[1] sig=0 <add2>
+Export[2]:
+ - func[0] <add> -> "add"
+ - func[1] <add2> -> "add2"
+Code[2]:
+ - func[0] size=7 <add>
+ - func[1] size=7 <add2>
+```
+
+### wasm2wat
+```console
+$ wasm2wat out/add.wasm 
+(module
+  (type (;0;) (func (param i32 i32) (result i32)))
+  (func (;0;) (type 0) (param i32 i32) (result i32)
+    local.get 0
+    local.get 1
+    i32.add)
+  (func (;1;) (type 0) (param i32 i32) (result i32)
+    local.get 0
+    local.get 1
+    i32.add)
+  (export "add" (func 0))
+  (export "add2" (func 1)))
+```
+Notice that this added a `type` and that the function names are now just using
+indecies. A source map can be used link this back to the source code if
+available.
 
