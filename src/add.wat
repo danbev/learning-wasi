@@ -11,8 +11,8 @@
     Example of using prefix notation where the operation comes first.
   ;)
   ;; naming parameters is optional and the indexes can b used.
-  (func $add2(param i32)(param $b i32) (result i32)
-	(i32.add (local.get 0) (local.get $b))
+  (func $add2(param i32 i32) (result i32)
+	(i32.add (local.get 0) (local.get 1))
   )
   (export "add" (func $add))
   (export "add2" (func $add2))
