@@ -44,6 +44,27 @@ The `local.get` instruction will retrieve the first argument and push that onto
 the stack. The following argument will push a constant onto the stack. Since
 there are no more subexpressions the `i32.add` expression will be evaulated and
 the arguments it takes are now on the stack which can be popped off.
+So the order would be like this:
+```
+  local.get 0
+  i32.const 2
+  i32.add
+```
+
+The following is an example where two local variables are used:
+```console
+$ wasm-objdump -d add.wasm
+
+add.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000022 func[0] <add>:
+ 000023: 20 00                      | local.get 0
+ 000025: 20 01                      | local.get 1
+ 000027: 6a                         | i32.add
+ 000028: 0b                         | end
+```
 
 
 ### Data types
