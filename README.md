@@ -1,6 +1,9 @@
 ### Learning Web Assembly System Interface (WASI)
 This project is a collection of notes and examples to help me understand WASI
-and WASM.
+and WASM. This is an API to which provides access to operating system like
+function calls to access files and the filesystem, Berkley sockets, clocks, and
+random numbers. At the same time it has a capability-based security model for
+this I/O (it extends WebAssembly's sandbox model).
 
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
@@ -1363,6 +1366,11 @@ each other.
 WASM threads can share the same wasm memory using an underlying SharedArrayBuffer.
 Each wasm thread runs in a WebWorker but they share their memory which allows
 them to work like a normal pthreads application would. 
+
+This proposal provides the building blocks for writing a threading library and
+does not provide the actual library itself.
+
+Atomic operations have been added 
 
 TODO: Add an example...
 
