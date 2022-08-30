@@ -1,6 +1,6 @@
 ### Learning Web Assembly System Interface (WASI)
 This project is a collection of notes and examples to help me understand WASI
-and WASM. This is an API to which provides access to operating system like
+and WASM. This is an API which provides access to operating system like
 function calls to access files and the filesystem, Berkley sockets, clocks, and
 random numbers. At the same time it has a capability-based security model for
 this I/O (it extends WebAssembly's sandbox model).
@@ -8,7 +8,7 @@ this I/O (it extends WebAssembly's sandbox model).
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
 [fd_write](https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call.
-The input to fd_write are:
+The input to fd_write is shown below:
 ```
 __wasi_fd_write(__wasi_fd_t fd, const __wasi_ciovec_t *iovs and size_t iovs_len
 ```
