@@ -5,6 +5,15 @@ function calls to access files and the filesystem, Berkley sockets, clocks, and
 random numbers. At the same time it has a capability-based security model for
 this I/O (it extends WebAssembly's sandbox model).
 
+
+### Install Wasmtime
+```console
+$ curl https://wasmtime.dev/install.sh -sSf | bash
+$ source ~/.bashrc 
+$ wasmtime --version
+wasmtime-cli 0.40.0
+```
+
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
 [fd_write](https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call.
@@ -30,13 +39,13 @@ So we can see that we have a pointer to a buffer and a length.
 The example [args_sizes_get.wat](src/args_sizes_get.wat) contains an example of calling 
 [__wasi_args_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_args_sizes_get).
 
-This shown an important point that I totally missed when first looking at calling
+This shows an important point that I totally missed when first looking at calling
 it. Looking at the documentation we can see that this function outputs:
 ```
 size_t argc            The number of arguments
 size_t argv_buf_size   The size of the argument string data.
 ```
-What I did not understand was that there are pointers that are passed into the
+What I did not understand was that these are pointers that are passed into the
 function. So we have to specify the memory locations that it should use to 
 populate these values. 
 
