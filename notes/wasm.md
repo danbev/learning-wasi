@@ -94,6 +94,11 @@ end
 nop
 ```
 
+An `if` statement requires that there is a i32 value on the top of the stack
+(wasm does not have a boolean data type, instead i32 is used to represent
+booleans). If that value is non-zero then it is treated as `true` and if  it is
+0 or negative it will be `false`.
+
 
 ### Memory
 Wasm does not have a heap like we are used to. Instead wasm has a linear memory
