@@ -164,3 +164,7 @@ Notice that this added a `type` and that the function names are now just using
 indecies. A source map can be used link this back to the source code if
 available.
 
+
+### local.tee
+This instruction can set a variable and also load the value onto the stack.
+Example: [tee.wat](../src/tee.wat), [tee.js](../src/tee.js)
