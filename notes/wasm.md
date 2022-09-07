@@ -165,6 +165,9 @@ Code[2]:
  - func[1] size=7 <add2>
 ```
 
+### local.set
+Sets the value of a local variable to the value on the stack.
+
 ### wasm2wat
 ```console
 $ wasm2wat out/add.wasm 
@@ -189,3 +192,9 @@ available.
 ### local.tee
 This instruction can set a variable and also load the value onto the stack.
 Example: [tee.wat](../src/tee.wat), [tee.js](../src/tee.js)
+
+### Globals
+I a variable that is available to both JS and wasm modules.
+```javascript
+  const global = new WebAssembly.Global({value: "i32", mutable: true}, 18);
+```
