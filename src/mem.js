@@ -5,7 +5,7 @@ const wasm_file = 'mem.wasm';
 
 // Creates a new memory (think ArrayBuffer of size 1 page (64KB)
 //const memory = new WebAssembly.Memory({ initial: 1, maximum: 100, shared: true });
-const memory = new WebAssembly.Memory({ initial: 1 });
+const memory = new WebAssembly.Memory({ initial: 1, maximum: 100 });
 const buffer = memory.buffer;
 console.log(memory);
 
