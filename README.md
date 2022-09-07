@@ -40,8 +40,8 @@ This section is an attempt to answer a question I asked myself while working
 on a uvwasi [issue](https://github.com/nodejs/uvwasi/pull/176). The fix in this
 case was correcting a return value from uvwasi_fd_readdir. I read the docs and
 figured out that something was calling this function, and depending on the value
-returned would try to read more entries (or not if it was done). But what was
-not clear to me done.
+returned would try to read more entries (or not if it was done). But which 
+function was calling this uvwasi function was not clear to me.
 
 Lets take a look at compiling c program what uses readdir (man 3 readdir).
 The program is very simple and prints out all the files (directory entries)
@@ -136,9 +136,8 @@ WASI {
     fd_readdir: [Function: bound fd_readdir],
     ...
 ```
-If we look at Imports in readdir.wasm we can find:
 
-When we compile the c program into a wasm module we do so with a compile that
+When we compile the c program into a wasm module we do so with a compiler that
 supports Wasi, in our case we are using clang from wasi-sdk which uses wasi-libc.
 If we think about this it makes sense that we have different libc libraries for
 different environments. The make target that compiles readdir.c into an
@@ -285,7 +284,18 @@ struct dirent *readdir(DIR *dirp) {
     dirp->buffer_processed = 0;
   }
 }
+```
+If we compare this to the wat (WebAssembly Test format) above we can see that
+they match up.
 
+So to answer my original question it is the above function, which is part of the
+wasi-libc library, which is compiled into the Wasm module. Much like a
+statically linked "normal" c program which is statically linked with a libc
+implementation would include the readdir function as well.
+
+The following are some structs and macros with comments used in the above
+code comments:
+```c
 #define DIRENT_DEFAULT_BUFFER_SIZE 4096
 
 struct _DIR {
@@ -315,22 +325,7 @@ typedef uint64_t __wasi_dircookie_t;    // size: 8 bytes
 typedef uint64_t __wasi_inode_t;        // size: 8 bytes
 typedef uint32_t __wasi_dirnamlen_t;    // size: 4 bytes
 typedef uint8_t __wasi_filetype_t;      // size: 1 bytes
-```
 
-_work in progress_
-
-libc-top-half/musl/arch/i386/bits/syscall.h.in:
-```console
-#define __NR_readdir             89
-```
-This file is used by libc-top-half/musl/Makefile.
-```console
-obj/include/bits/syscall.h: $(srcdir)/arch/$(ARCH)/bits/syscall.h.in
-        cp $< $@
-        sed -n -e s/__NR_/SYS_/p < $< >> $@
-```
-
-```c
 #define DIRENT_DEFAULT_BUFFER_SIZE 4096
 
 struct _DIR {
@@ -350,10 +345,10 @@ struct _DIR {
 };
 ```
 
+We can run `readdir.wasm` using wasmtime:
 ```console
 $ wasmtime --dir=. out/readdir.wasm
 ```
-
 
 ### args_sizes_get
 The example [args_sizes_get.wat](src/args_sizes_get.wat) contains an example of calling 
