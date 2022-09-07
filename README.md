@@ -44,8 +44,8 @@ returned would try to read more entries (or not if it was done). But which
 function was calling this uvwasi function was not clear to me.
 
 Lets take a look at compiling c program what uses readdir (man 3 readdir).
-The program is very simple and prints out all the files (directory entries)
-from the `src` directory:
+The [program](src/readdir.c) is very simple and prints out all the files
+(directory entries) from the `src` directory:
 ```console
 $ make out/readdir
 $ ./out/readdir
