@@ -34,4 +34,7 @@ const importObject = {
   console.log("wasm module should have added a 2 to index 1:");
   console.log(memory.buffer);
   console.log(a);
+  const bytes = new Uint8Array(memory.buffer, 3, 7);
+  const str = new TextDecoder('utf-8').decode(bytes);
+  console.log(`string from wasm memory: ${str}`);
 })();
