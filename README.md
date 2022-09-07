@@ -35,7 +35,7 @@ typedef struct uvwasi_ciovec_s {
 ```
 So we can see that we have a pointer to a buffer and a length.
 
-### wasi api calls explained
+### WASI api calls explained
 This section is an attempt to answer a question I asked myself while working
 on a uvwasi [issue](https://github.com/nodejs/uvwasi/pull/176). The fix in this
 case was correcting a return value from uvwasi_fd_readdir. I read the docs and
