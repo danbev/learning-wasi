@@ -10,7 +10,7 @@ const buffer = memory.buffer;
 console.log(memory);
 
 // Creata a TypedArray for the memory buffer
-const a = new Uint32Array(memory.buffer);
+const a = new Uint8Array(memory.buffer);
 // Write to the memory buffer
 a[0] = 1;
 console.log(buffer);
@@ -33,4 +33,5 @@ const importObject = {
   console.log(instance.exports);
   console.log("wasm module should have added a 2 to index 1:");
   console.log(memory.buffer);
+  console.log(a);
 })();
