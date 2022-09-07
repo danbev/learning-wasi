@@ -3,3 +3,4 @@ lucet
 wasi-libc
 out
 build
+readdir_s.map
