@@ -100,6 +100,11 @@ booleans). If that value is non-zero then it is treated as `true` and if  it is
 0 or negative it will be `false`.
 
 
+### block
+This statement creates a label which can be exited by using br. Branching to a
+block jumps to the end of the block.
+
+
 ### Memory
 Wasm does not have a heap like we are used to. Instead wasm has a linear memory
 which means memory is a contiguous block of bytes in the module. The actual
