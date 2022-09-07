@@ -268,7 +268,7 @@ struct dirent* readdir(DIR* dirp);
 ```
 If we look at wasi-sdk it contains wasi-libc as a git submodule in
 src/wasi-libc. There is a top-half of this libc implementation which is based
-on [musl](https://musl.libc.org/)] and in
+on [musl](https://musl.libc.org/) and in
 wasi-sdk/src/wasi-libc/libc-bottom-half/cloudlibc/src/libc/dirent/readdir.c we
 can find the implementation of `readdir`:
 ```c
@@ -300,7 +300,7 @@ struct dirent *readdir(DIR *dirp) {
   }
 }
 ```
-If we compare this to the wat (WebAssembly Test format) above we can see that
+If we compare this to the wat (WebAssembly Text format) above we can see that
 they match up.
 
 So to answer my original question it is the above function, which is part of the
