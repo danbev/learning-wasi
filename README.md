@@ -87,7 +87,22 @@ $ ls -hgG out/readdir_s out/readdir
 -rwxrwxr-x. 1  21K Sep  7 11:03 out/readdir
 -rwxrwxr-x. 1 1.5M Sep  7 11:10 out/readdir_s
 ```
-If we use objdump on readdir_s we won't see anything named `readdir`. 
+If we use objdump on readdir_s we won't see anything named `readdir`. But we
+can take a look at the linker map which is generated for this target, named
+`readdir_s.map`:
+```
+.text          0x0000000000444110       0xf0 /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/libc.a(readdir64.o)
+               0x0000000000444110                readdir
+               0x0000000000444110                __readdir64
+               0x0000000000444110                __readdir
+               0x0000000000444110                readdir64
+```
+And if we disassemble `readdir_s`:
+```console
+$ objdump -d out/readdir_s
+...
+4016c9:       e8 42 2a 04 00          call   0x444110
+```
 
 Now, lets compile the same c program into wasm:
 ```console
