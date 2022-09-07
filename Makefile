@@ -1,4 +1,4 @@
-LLVM_HOME=/home/danielbevenius/work/wasm/wasi-sdk/download/wasi-sdk-8.0
+LLVM_HOME=/home/danielbevenius/work/wasm/wasi-sdk/build/install/opt/wasi-sdk
 LLVM_BIN=${LLVM_HOME}/bin
 WASI_SYSROOT=${LLVM_HOME}/share/wasi-sysroot
 WASMTIME=~/work/wasm/wasmtime/target/release/wasmtime
@@ -9,6 +9,18 @@ out/first.wasm: src/first.c | out
 
 out/firstcxx.wasm: src/first.cc | out
 	${LLVM_BIN}/clang++ -v -std=c++11 --target=${TRIPLE} --sysroot ${WASI_SYSROOT} -O2 -s -o out/firstcxx.wasm $<
+
+out/readdir.wasm: src/readdir.c | out
+	${LLVM_BIN}/clang --target=${TRIPLE} --sysroot ${WASI_SYSROOT} -g -O0 -s -o $@ $<
+
+out/readdir.llvm: src/readdir.c | out
+	${LLVM_BIN}/clang -S -emit-llvm --target=${TRIPLE} --sysroot ${WASI_SYSROOT} -O0 -o $@ $<
+
+out/readdir: src/readdir.c | out
+	${CC} -O0 -g -s -o $@ $<
+
+out/readdir_s: src/readdir.c | out
+	${CC} -O0 -g -s -static -Xlinker -Map=readdir_s.map -o $@ $<
 
 out/%.wasm: src/%.wat | out
 	wat2wasm -v -o $@ $< --debug-names
@@ -32,4 +44,4 @@ args_sizes_get:
 .PHONY: clean
 
 clean: 
-	@rm -rf out
+	@${RM} -rf out

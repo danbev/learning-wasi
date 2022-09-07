@@ -35,6 +35,326 @@ typedef struct uvwasi_ciovec_s {
 ```
 So we can see that we have a pointer to a buffer and a length.
 
+### wasi api calls explained
+This section is an attempt to answer a question I asked myself while working
+on a uvwasi [issue](https://github.com/nodejs/uvwasi/pull/176). The fix in this
+case was correcting a return value from uvwasi_fd_readdir. I read the docs and
+figured out that something was calling this function, and depending on the value
+returned would try to read more entries (or not if it was done). But what was
+not clear to me done.
+
+Lets take a look at compiling c program what uses readdir (man 3 readdir).
+The program is very simple and prints out all the files (directory entries)
+from the `src` directory:
+```console
+$ make out/readdir
+$ ./out/readdir
+readdir example
+d_name: multivalue.wat
+...
+```
+This is a dynmically linked executable:
+```console
+$ file out/readdir
+out/readdir: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=e5ad67a7cb11843781c8b42bd281898dcef7a8b1, for GNU/Linux 3.2.0, stripped
+```
+And we can inspect the dynamic symbols using:
+```console
+$ nm -D out/readdir
+                 U closedir@GLIBC_2.2.5
+                 U fwrite@GLIBC_2.2.5
+                 w __gmon_start__
+                 U __libc_start_main@GLIBC_2.34
+                 U opendir@GLIBC_2.2.5
+                 U puts@GLIBC_2.2.5
+                 U readdir@GLIBC_2.2.5
+0000000000404060 B stderr@@GLIBC_2.2.5
+
+$ ldd out/readdir
+	linux-vdso.so.1 (0x00007ffc02fef000)
+	libc.so.6 => /usr/lib64/libc.so.6 (0x00007fbfeb9ed000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fbfebc16000)
+```
+A wasm module is more like a statically linked executable:
+```console
+$ make out/readdir_s
+cc -O0 -g -s -static -o out/readdir_s src/readdir.c
+
+$ file out/readdir_s 
+out/readdir_s: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, BuildID[sha1]=50e9b76eea75c197d1a417c3946b462108ead1b6, for GNU/Linux 3.2.0, stripped, too many notes (256)
+
+$ ls -hgG out/readdir_s out/readdir
+-rwxrwxr-x. 1  21K Sep  7 11:03 out/readdir
+-rwxrwxr-x. 1 1.5M Sep  7 11:10 out/readdir_s
+```
+If we use objdump on readdir_s we won't see anything named `readdir`. 
+
+Now, lets compile the same c program into wasm:
+```console
+$ make out/readdir.wasm
+```
+This target is using `wasi-sdk` to compile `readdir.c` to a wasm module.
+
+So lets take a closer look at the generated module:
+```console
+$ wasm-objdump -x out/readdir.wasm
+
+readdir.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[16]:
+ ...
+ - type[4] (i32, i32, i32, i64, i32) -> i32
+
+Import[11]:
+ - func[0] sig=2 <wasi_snapshot_preview1.args_get> <- wasi_snapshot_preview1.args_get
+ - func[1] sig=2 <wasi_snapshot_preview1.args_sizes_get> <- wasi_snapshot_preview1.args_sizes_get
+ - func[2] sig=3 <wasi_snapshot_preview1.fd_close> <- wasi_snapshot_preview1.fd_close
+ - func[3] sig=2 <wasi_snapshot_preview1.fd_fdstat_get> <- wasi_snapshot_preview1.fd_fdstat_get
+ - func[4] sig=2 <wasi_snapshot_preview1.fd_prestat_get> <- wasi_snapshot_preview1.fd_prestat_get
+ - func[5] sig=0 <wasi_snapshot_preview1.fd_prestat_dir_name> <- wasi_snapshot_preview1.fd_prestat_dir_name
+ - func[6] sig=4 <wasi_snapshot_preview1.fd_readdir> <- wasi_snapshot_preview1.fd_readdir
+ - func[7] sig=5 <wasi_snapshot_preview1.fd_seek> <- wasi_snapshot_preview1.fd_seek
+ - func[8] sig=6 <wasi_snapshot_preview1.fd_write> <- wasi_snapshot_preview1.fd_write
+ - func[9] sig=7 <wasi_snapshot_preview1.path_open> <- wasi_snapshot_preview1.path_open
+ - func[10] sig=8 <wasi_snapshot_preview1.proc_exit> <- wasi_snapshot_preview1.proc_exi
+```
+By looking at the above we can see that there are a number of imports that
+need to provided by host environment, via the `importObject`. We can see that
+function 6 which has signature 4 which is `wasi_snapshot_preview1.fd_readdir`
+this is the uvwasi function.
+
+In Node.js we can see that `fd_readdir` is mapped to the wasiImport object
+and this function will call uvwasi_fd_readdir.
+```console
+WASI {
+  wasiImport: WASI {
+    args_get: [Function: bound args_get],
+    ...
+    fd_read: [Function: bound fd_read],
+    fd_readdir: [Function: bound fd_readdir],
+    ...
+```
+If we look at Imports in readdir.wasm we can find:
+
+When we compile the c program into a wasm module we do so with a compile that
+supports Wasi, in our case we are using clang from wasi-sdk which uses wasi-libc.
+If we think about this it makes sense that we have different libc libraries for
+different environments. The make target that compiles readdir.c into an
+executable is using the GNU libc library, and the target that compile into a
+wasm module will use wasi-libc.
+
+So, the call to `readdir` which we know is declared in `dirent.h` but is not
+included in our code but instead linked by the linker in the compilation
+process.
+
+So, lets start by finding out where `wasi_snapshot_preview1.fd_readdir` is
+declared. It can be found in `libc-bottom-half/sources/__wasilibc_real.c`:
+```c
+int32_t __imported_wasi_snapshot_preview1_fd_readdir(int32_t arg0, int32_t arg1, int32_t arg2, int64_t arg3, int32_t arg4) __attribute__((
+    __import_module__("wasi_snapshot_preview1"),
+    __import_name__("fd_readdir")
+));
+```
+This is specifying that this function will be defined as the symbol name
+`fd_readdir` inside of the WebAssembly linking environment using
+[__import-name__](https://clang.llvm.org/docs/AttributeReference.html#import-name).
+
+Lets take another look at the wasm module:
+```console
+$ wasm-objdump -x out/readdir.wasm
+Type[17]:
+ - type[0] (i32, i32, i32) -> i32
+ - type[1] (i32, i64, i32) -> i64
+ - type[2] (i32, i32) -> i32
+ - type[3] (i32) -> i32
+ - type[4] (i32, i32, i32, i64, i32) -> i32
+ ...
+Import[11]:
+ ...
+ - func[6] sig=4 <wasi_snapshot_preview1.fd_readdir> <- wasi_snapshot_preview1.fd_readdir
+```
+So, the mistake I've been doing was that I was expecting to find a call to
+`readdir` somewhere in the disassembled wasm but there is no guarantee that
+the name of the function will be preserved so we have to figure out how this
+works. This can be done using:
+```console
+$ wasm-objdump -d out/readdir.wasm > readdir.dis
+```
+If we search for where function 6 is called we find that happens in function 32:
+```
+003481 func[32]:
+ 003482: 20 00                      | local.get 0
+ 003484: 20 01                      | local.get 1
+ 003486: 20 02                      | local.get 2
+ 003488: 20 03                      | local.get 3
+ 00348a: 20 04                      | local.get 4
+ 00348c: 10 86 80 80 80 00          | call 6 <wasi_snapshot_preview1.fd_readdir>
+ 003492: 41 ff ff 03                | i32.const 65535
+ 003496: 71                         | i32.and
+ 003497: 0b                         | end
+```
+Function 32 uses the signature index 4 so it takes 5 parameters and returns
+an i32. This sounds familiar, it looks like func 32 is
+[fd_readdir](https://github.com/WebAssembly/WASI/blob/main/phases/snapshot/docs.md#-fd_readdirfd-fd-buf-pointeru8-buf_len-size-cookie-dircookie---resultsize-errno)
+```
+fd_readdir(fd: fd, buf: Pointer<u8>, buf_len: size, cookie: dircookie) -> Result<size, errno>
+```
+In our case the Result<size> is actually one of the parameters passed in.
+
+If we search for where function 32 is called (search for 'call 32') we find that
+it gets called in functions, 25 and 46.
+Lets start with function 25:
+```
+  (func (;25;) (type 3) (param i32) (result i32) ;; one parameter (DIR* dirp)
+    (local i32 i32 i32 i32 i32 i32 i32 i64 i64)  ;; 9 local variables in this function
+    local.get 0    ;; local 0 is the first parameter so this is DIR* dirp.
+    i32.const 28   ;; this is placing 28 onto the stack
+    i32.add        ;; this is adding 28 to the DIR pointer, which buffer_used (see struct _DIR) further down)
+    local.set 1    ;; store this value in local variable 1
+    local.get 0    ;; load local 0 again (it was popped off by i32.add)
+    i32.load offset=20 ;; loads a 32-bit integer from memory, starting from the topmost value on the stack, which is DIR* dirp, and offset 20
+                       ;; and if we again look at struct _DIR this looks like it will be the buffer_processed member of DIR.
+    local.set 2        ;; The above value (buffer_processed is stored in local variable 2
+                       ;; local 0 = DIR* dirp
+                       ;; local 1 = buffer_used
+                       ;; local 2 = buffer_processed
+    loop (result i32)  ;; label = @, is is the for (;;) loop.
+      block  ;; label = @2
+        block  ;; label = @3
+          block  ;; label = @4
+            block  ;; label = @5
+              block  ;; label = @6
+                block  ;; label = @7
+                  local.get 1      ;; push buffer_used onto the stack
+                  i32.load         ;; load a 32-bit integer starting from the topmost value on the stack
+                  local.tee 3      ;; store this value in local variable 3 (buffer_used value), and also leave a copy on the stack
+                  local.get 2      ;; push buffer_processed onto the stack
+                  i32.sub          ;; buffer_used - buffer_processed
+                  local.tee 4      ;; store the result in local variable 4 (buffer_left)
+                  i32.const 23     ;; 23 is sizeof(__wasi__dirent_t) though I though this should be 21 bytes
+                  i32.gt_u         ;; greater than unsigned checks if buffer_left < 23, if true 1 will be pushed onto the stack, 0 otherwise
+                  br_if 0 (;@7;)   ;; if not greater than branch to label @7
+                  local.get 3      ;; push local variable 3 (buffer_used value) onto the stack
+                  local.get 0      ;; push local variable 0 (DIR* dirp)
+                  i32.load offset=24 ;; load from memory starting at the topmost value on the stack, using offset 24 (buffer_size)
+                  local.tee 4        ;; store the result in local variable 4 and also leave a copy on the stack
+                  i32.ge_u           ;; if buffer_used < buffer_size
+                  br_if 1 (;@6;)     ;; branch to end of block 1 if not true
+                  i32.const 0        ;; load const 0 onto the stack (NULL)
+                  return             ;; return topmost value (NULL);
+                end
+```
+Function 25's signature can be found in index 3 which takes a single i32 and
+returns an i32. I'm thinking that these i32 are pointers, which would match
+up with the signature of `readdir`:
+```c
+struct dirent* readdir(DIR* dirp);
+```
+If we look at wasi-sdk it contains wasi-libc as a git submodule in
+src/wasi-libc. There is a top-half of this libc implementation which is based
+on [musl](https://musl.libc.org/)] and in
+wasi-sdk/src/wasi-libc/libc-bottom-half/cloudlibc/src/libc/dirent/readdir.c we
+can find the implementation of `readdir`:
+```c
+struct dirent *readdir(DIR *dirp) {
+  for (;;) {
+   if (buffer_left < sizeof(__wasi_dirent_t)) {
+      // End-of-file.
+      if (dirp->buffer_used < dirp->buffer_size)
+        return NULL;
+      goto read_entries;
+   }
+   ...
+
+   read_entries:
+    // Discard data currently stored in the input buffer.
+    dirp->buffer_used = dirp->buffer_processed = dirp->buffer_size;
+
+    // Load more directory entries and continue.
+    __wasi_errno_t error = __wasi_fd_readdir(dirp->fd,
+                                             (uint8_t *)dirp->buffer,
+                                             dirp->buffer_size,
+                                             dirp->cookie,
+                                             &dirp->buffer_used);
+    if (error != 0) {
+      errno = error;
+      return NULL;
+    }
+    dirp->buffer_processed = 0;
+  }
+}
+
+#define DIRENT_DEFAULT_BUFFER_SIZE 4096
+
+struct _DIR {
+  // Directory file descriptor and cookie.
+  int fd;                                   // 0 - 4
+  __wasi_dircookie_t cookie;                // 4 ->12
+
+  // Read buffer.
+  char *buffer;                             // 12 ->20
+  size_t buffer_processed;                  // 20 ->24
+  size_t buffer_size;                       // 24 ->28
+  size_t buffer_used;                       // 28
+
+  // Object returned by readdir().
+  struct dirent *dirent;
+  size_t dirent_size;
+};
+
+typedef struct __wasi_dirent_t {
+    __wasi_dircookie_t d_next;
+    __wasi_inode_t d_ino;
+    __wasi_dirnamlen_t d_namlen;
+    __wasi_filetype_t d_type;
+} __wasi_dirent_t;
+
+typedef uint64_t __wasi_dircookie_t;    // size: 8 bytes
+typedef uint64_t __wasi_inode_t;        // size: 8 bytes
+typedef uint32_t __wasi_dirnamlen_t;    // size: 4 bytes
+typedef uint8_t __wasi_filetype_t;      // size: 1 bytes
+```
+
+_work in progress_
+
+libc-top-half/musl/arch/i386/bits/syscall.h.in:
+```console
+#define __NR_readdir             89
+```
+This file is used by libc-top-half/musl/Makefile.
+```console
+obj/include/bits/syscall.h: $(srcdir)/arch/$(ARCH)/bits/syscall.h.in
+        cp $< $@
+        sed -n -e s/__NR_/SYS_/p < $< >> $@
+```
+
+```c
+#define DIRENT_DEFAULT_BUFFER_SIZE 4096
+
+struct _DIR {
+  // Directory file descriptor and cookie.
+  int fd;                                   // 0 - 4
+  __wasi_dircookie_t cookie;                // 4 ->12
+
+  // Read buffer.
+  char *buffer;                             // 12 ->20
+  size_t buffer_processed;                  // 20 ->24
+  size_t buffer_size;                       // 24 ->28
+  size_t buffer_used;                       // 28
+
+  // Object returned by readdir().
+  struct dirent *dirent;
+  size_t dirent_size;
+};
+```
+
+```console
+$ wasmtime --dir=. out/readdir.wasm
+```
+
+
 ### args_sizes_get
 The example [args_sizes_get.wat](src/args_sizes_get.wat) contains an example of calling 
 [__wasi_args_sizes_get](https://github.com/CraneStation/wasmtime/blob/master/docs/WASI-api.md#__wasi_args_sizes_get).
@@ -291,7 +611,8 @@ $ git submodule init
 $ git submodule update
 ```
 I've also [downloaded](https://github.com/WebAssembly/wasi-sdk/releases) and
-unpacked these locally as this is quicker than having to build llvm-project.
+unpacked these locally as this is quicker than having to build llvm-project and
+also it takes a look of disk space which is an issue for me.
 This is what I specify in the Makefile as the `LLVM_HOME`.
 
 ### Building wasi-libc
