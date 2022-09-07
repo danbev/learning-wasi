@@ -105,8 +105,24 @@ Wasm does not have a heap like we are used to. Instead wasm has a linear memory
 which means memory is a contiguous block of bytes in the module. The actual
 memory can be exported and made available to the outside, or it can be imported
 from the host. It's like we have a variable that is a array of bytes which we
-can store things into.
+can store things into. Its is like an ArrayBuffer in JavaScript.
 
+Instructions like i32.load are used to reading out of this array of bytes, and
+i32.store is used for writing into the array of bytes.
+If we want to store a string, we need to write it into this byte array, and if
+we want to load it we have to read those bytes. In JavaScript there are views
+into an ArrayBuffer that helps with this or TypedArray's.
+
+The `data` instruction can be used to write to the memory byte buffer. One thing
+to note is that this takes a string as its operand so if we want to write an
+integer we have to escape it.
+[mem.wat](../src/mem.wat) contains an example and [mem.js](../src/mem.js) shows
+the JavaScript. 
+
+```console
+$ make out/mem.wat
+$ node src/mem.js
+```
 
 ### WebAssembly Test (wat)
 
