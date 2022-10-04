@@ -156,7 +156,7 @@ When we compile the c program into a wasm module we do so with a compiler that
 supports Wasi, in our case we are using clang from wasi-sdk which uses wasi-libc.
 If we think about this it makes sense that we have different libc libraries for
 different environments. The make target that compiles readdir.c into an
-executable is using the GNU libc library, and the target that compile into a
+executable is using the GNU libc library, and the target that compiles into a
 wasm module will use wasi-libc.
 
 So, the call to `readdir` which we know is declared in `dirent.h` but is not
@@ -189,8 +189,8 @@ Import[11]:
  ...
  - func[6] sig=4 <wasi_snapshot_preview1.fd_readdir> <- wasi_snapshot_preview1.fd_readdir
 ```
-So, the mistake I've been doing was that I was expecting to find a call to
-`readdir` somewhere in the disassembled wasm but there is no guarantee that
+So, the mistake I've been making was that I was expecting to find a call to
+`readdir` somewhere in the disassembled wasm, but there is no guarantee that
 the name of the function will be preserved so we have to figure out how this
 works. This can be done using:
 ```console
@@ -274,6 +274,7 @@ can find the implementation of `readdir`:
 ```c
 struct dirent *readdir(DIR *dirp) {
   for (;;) {
+   size_t buffer_left = dirp->buffer_used - dirp->buffer_processed;
    if (buffer_left < sizeof(__wasi_dirent_t)) {
       // End-of-file.
       if (dirp->buffer_used < dirp->buffer_size)
@@ -302,6 +303,11 @@ struct dirent *readdir(DIR *dirp) {
 ```
 If we compare this to the wat (WebAssembly Text format) above we can see that
 they match up.
+
+Notice the first if statement in the for loop and the second if statement which
+is checking the if buffer_used is less than the buffer_size. If buff_used is
+the same as buffer_size this indicated that there are more items to be read and
+the code will jump/goto `read_entries`.
 
 So to answer my original question it is the above function, which is part of the
 wasi-libc library, which is compiled into the Wasm module. Much like a
