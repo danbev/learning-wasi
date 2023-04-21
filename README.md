@@ -712,8 +712,8 @@ All code is grouped into functions:
 (func <signature> <locals> <body>)
 ```
 The signature declares the functions parameters and its return type.
-The locals are local variables to the function
-The body is a list of instructions for the fuction.
+The locals are local variables to the function.
+The body is a list of instructions for the function.
 
 ```wasm
 (module
