@@ -1,4 +1,4 @@
-LLVM_HOME=/home/danielbevenius/work/wasm/wasi-sdk/build/install/opt/wasi-sdk
+LLVM_HOME=/home/danielbevenius/work/wasm/wasi-sdk-20.0
 LLVM_BIN=${LLVM_HOME}/bin
 WASI_SYSROOT=${LLVM_HOME}/share/wasi-sysroot
 WASMTIME=~/work/wasm/wasmtime/target/release/wasmtime
