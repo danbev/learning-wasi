@@ -53,5 +53,92 @@ Following that we have the version
 The magic and the version make out the preamble which is followed by a
 sequence of sections.
 
+### Sections
+```
+Name      Identifier
+--------------------
+custom    0
+type      1
+import    2
+function  3
+table     4
+memory    5
+global    6
+export    7
+start     8
+element   9
+code      10
+data      11
+```
+
+#### Custom sections
+The can be variable size compared to the other sections which are set. The size
+of a custom section, the number of bytes, is specified after section id (0).
+This allows wasm implemenations that don't recognize a custom section to just
+skip.
+
+#### Type section
+This section contains function signatures.
+
+```console
+$ wasm-objdump -s -x -j type add.wasm 
+
+add.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[2]:
+ - type[0] () -> nil
+ - type[1] (i32, i32) -> i32
+
+Contents of section Type:
+000000a: 0260 0000 6002 7f7f 017f                 .`..`.....
+```
+
+We bit string can be broken down into:
+```console
+000000a: 0260 0000 6002 7f7f 017f                 .`..`.....
+          ↑↑  ↑ ↑  ↑  ↑  ↑ ↑  ↑ ↑
+      size||  | |  |tag  | |  | |
+        tag|  | |     |params size
+   params size| |        |i32 | |
+    results size|          |i32 |
+                              |result size
+                                |i32 (result)
+```
+
+The following Rest pseudo code tries to illustrate the structure of the Type
+section:
+```rust
+struct Type {
+  id: u32, // 0x01
+  size: leb128,
+  types: Vec<FuncType>
+}
+
+struct FuncType {
+  tag: u32, // 0x60
+  params: Vec<ValueType>,
+  results: Vec<ValueType>,
+}
+
+enum ValueType {
+  i32: 0x7F,
+  i64: 0x7E,
+  f32: 0x7D,
+  f64: 0x7C,
+}
+```
+
+$ wasm-objdump -s -j type add.wasm 
+
+add.wasm:	file format wasm 0x1
+
+Contents of section Type:
+000000a: 0260 0000 6002 7f7f 017f                 .`..`.....
+
+
+### LEB128
+Little Endian Base 128
 
 [magic]: https://webassembly.github.io/spec/core/binary/modules.html#binary-module
