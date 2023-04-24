@@ -4,6 +4,25 @@ Is a portable binary instruction format for a stack based virtual machine.
 Just because it has Web in it's name does not limit Wasm to web/browser
 environment, it can also be run with other runtimes.
 
+Keep in mind that a wasm module is contains partially compiled code from
+a language, we can think of it as bitcode. But the engine that is going to run
+the module will need to decode this .wasm file/bytes, validate that it is
+wellformed, and then compile it to native machine code.
+
+### WebAssembly.compile
+This will compile the .wasm bytes in an ArrayBuffer so the engine will
+validtate the format of these bytes and then compile them into native machine
+code. This will be retuned as a WebAssembly.Module.
+
+### WebAssembly.instantiate
+Remember that a wasm module can have imports and instantiating will create a
+new WebAssembly.Instance with the passed in import object. Another instance
+might use a different import object but both can use the same
+WebAssembly.Module.
+
+The WebAssembly.compile and WebAssembly.instantiate functions can be combined
+into a singel function call using instantiate(bytes, imports).
+
 ### Spec
 https://webassembly.github.io/spec/core/
 
