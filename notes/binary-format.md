@@ -129,16 +129,16 @@ enum ValueType {
   f64: 0x7C,
 }
 ```
-
-$ wasm-objdump -s -j type add.wasm 
-
-add.wasm:	file format wasm 0x1
-
-Contents of section Type:
-000000a: 0260 0000 6002 7f7f 017f                 .`..`.....
-
+I came accross [warlus] which is a crate that is used by [wasm-bindgen] and
+it contains various types. For example, it has a [ty] module which contains and
+[Type], [TypeValue] similar to the one made up above.
 
 ### LEB128
 Little Endian Base 128
 
 [magic]: https://webassembly.github.io/spec/core/binary/modules.html#binary-module
+[walrus]: https://github.com/rustwasm/walrus
+[wasm-bindgen]: https://github.com/rustwasm/wasm-bindgen
+[ty]: https://github.com/rustwasm/walrus/blob/9d6c9de432d6a97478dc76ebdf18aed51584c3af/src/ty.rs
+[type]: https://github.com/rustwasm/walrus/blob/9d6c9de432d6a97478dc76ebdf18aed51584c3af/src/ty.rs#L18
+[typevalue]: https://github.com/rustwasm/walrus/blob/9d6c9de432d6a97478dc76ebdf18aed51584c3af/src/ty.rs#L138
