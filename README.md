@@ -761,8 +761,8 @@ Lets take a closer look at the WebAssembly API.
 
 `WebAssembly` is the how the api is exposed.
 WebAssembly.instantiate:
-compiles and instantiates wasm code and returns both an object with two
-members `module` and `instance`.
+compiles and instantiates wasm code and returns an object with two members
+named `module` and `instance`.
 
 To inspect the .wasm you can use wasm-objdump:
 ```console
