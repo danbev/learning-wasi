@@ -1,14 +1,11 @@
-wit_bindgen::generate!("host");
+wit_bindgen::generate!("component");
 
-// Define a custom type and implement the generated `Host` trait for it which
-// represents implementing all the necesssary exported interfaces for this
-// component.
-struct MyHost;
+struct Something;
 
-impl Host for MyHost {
+impl Component for Something {
     fn something(s: String) -> String {
         format!("something was passed: {s}")
     }
 }
 
-export_host!(MyHost);
+export_component!(Something);
