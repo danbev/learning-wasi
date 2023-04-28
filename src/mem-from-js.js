@@ -8,8 +8,10 @@ const memory = new WebAssembly.Memory({ initial: 1, maximum: 100 });
 
 // Create a TypedArray for the memory buffer
 const mem_view = new Uint8Array(memory.buffer);
-mem_view.set(new TextEncoder().encode("bajja"));
-console.log("memory: ", mem_view);
+const input_string = "bajja";
+console.log(`input_string: ${input_string}`);
+mem_view.set(new TextEncoder().encode(input_string));
+console.log('memory: ', mem_view);
 
 const importObject = {
   js: {
@@ -21,10 +23,8 @@ const importObject = {
   const wasm = await WebAssembly.compile(
     await readFile(join(__dirname, `../out/${wasm_file}`))
   );
-  console.log(importObject);
 
   const instance = await WebAssembly.instantiate(wasm, importObject);
-  console.log(instance.exports);
   // Here we are passing in the positions of the string that we want to pass
   // to the function, start=0, end=5.
   instance.exports.copy_string(0, 5);
