@@ -35,4 +35,9 @@ default world example-component {
 }
 ```
 
+###  Running the wasm component
+Currently we have two examples of how to run this wasm component:
+* [JavaScript](./js)
+* [Python](./python)
+
 [wit-bindgen]: https://github.com/bytecodealliance/wit-bindgen
