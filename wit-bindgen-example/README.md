@@ -1,5 +1,6 @@
 ### wit-bindgen example
-This is a basic example of using [wit-bindgen].
+This is a basic example of using [wit-bindgen]. More details can be found in
+[wit-bindgen.md](../notes/wit-bindgen.md).
 
 ### Prerequisites
 
