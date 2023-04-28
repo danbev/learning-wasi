@@ -1,10 +1,10 @@
-###
-
+### wit-bindgen example
+This is a basic example of using [wit-bindgen].
 
 ### Prerequisites
 
 ```console
-$ rustup target add wasm32-wasi
+$ rustup target add wasm32-unknown-unknown
 ```
 
 ```console
@@ -34,3 +34,5 @@ default world example-component {
   export something: func(s: string)
 }
 ```
+
+[wit-bindgen]: https://github.com/bytecodealliance/wit-bindgen
