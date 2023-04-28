@@ -1,10 +1,5 @@
 ### JavaScript example of using a wit-bindgen component
 
-### Inspect the wasm component
-```console
-$ npx jco wit ../example-component.wasm
-```
-
 ### Inspect the component
 ```console
 $ npm run inspect-wit
