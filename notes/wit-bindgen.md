@@ -124,7 +124,7 @@ Now, lets start by looking at the function that we want to expose/export:
 ```
 So we can see that this function take a String and also returns a String.
 The wit will look like this, in
-[component.wit](../wit-bindgen-example/wit/compnent.wit):
+[component.wit](../wit-bindgen-example/wit/component.wit):
 ```
 default world component {
   export something: func(s: string) -> string
