@@ -1,4 +1,8 @@
 ### WebAssembly Binary format
+The binary format, as this document will hopefully make clear, can be parsed as
+a sequence. So it can parse a byte then decide what the type following it is,
+parse that type, and then continue. So the whole file does not need to be parsed
+before starting to interpret the meaning of the bytes.
 
 ```console
 $ xxd add.wasm 
