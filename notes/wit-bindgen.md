@@ -131,7 +131,7 @@ default world component {
 }
 ```
 A Wasm `world` can be thought of executable that can be run by a wasm runtime
-and describes what it imports from the and what it exports, with the types and
+and describes what it imports and what it exports, with the types and
 interfaces used/exposed.
 
 With the `component.wit` file we can use a macro from wit-bindgen to generate
@@ -188,7 +188,7 @@ pub unsafe fn from_raw_parts(ptr: *mut T, length: usize, capacity: usize) -> Sel
 }
 ```
 This function will also take care of the return value which notice is also
-a `i32`. Notice that the return value is a pointe as well in reality which will
+a `i32`. Notice that the return value is a pointer as well in reality which will
 point to a memory location what will hold length of the string and the pointer
 to the string.
 
@@ -208,6 +208,7 @@ impl Component for Something {
 ```
 Which is just what we wrote with expanded macros, in this case the format!
 macro.
+
 After that we have this block:
 ```console
 const _: () = {
@@ -225,9 +226,9 @@ const _: () = {
     }
 };
 ```
-I think this is called a free constant and notice it has contains a block and
-is an expression. The functions in there will be exported but we could Create
-a function with the same name and there without a compilation error.
+I think this is called a free constant and notice that it contains a block and
+is an expression. The functions in there will be exported but we could create
+a function with the same name without a compilation error.
 Also notice the `#[export_name = "something"`, so this is the function that will
 be called later by an external host.
 
@@ -244,7 +245,8 @@ $ make inspect-wat > wat
 ```
 
 Now, lets take a look at running this example and we will use JavaScript as
-the first language. The example can be found in [js](../wit-bindgen-example/js)
+the first language. The example can be found in
+[js](../wit-bindgen-example/js/README.md)
 ```console
 $ cd js
 $ npm i
@@ -274,6 +276,8 @@ $ npm run example
 something was passed: bajja
 ```
 
+We can also use the this with Python and an example can be found in
+[python](../wit-bindgen-example/python/README.md).
 
 __wip__
 
