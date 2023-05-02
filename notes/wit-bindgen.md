@@ -11,8 +11,8 @@ needs to be some kind of translation between those types and the types that
 wasm can handle.
 
 For example, if we want to write a function that takes a string, the bytes of
-that string would need to be copied into the Wasm memory and we would need to
-know the start and end positions. With that information our function could take
+that string would need to be copied into Wasm memory and we would need to know
+the start and end positions. With that information our function could take
 two `i32` values and be able to perform operations on the bytes that make up our
 string.
 
