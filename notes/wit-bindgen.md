@@ -232,17 +232,34 @@ a function with the same name without a compilation error.
 Also notice the `#[export_name = "something"`, so this is the function that will
 be called later by an external host.
 
-The next step is to create a wasm component of this:
+When build the wasm module like we would normally do, using:
+```console
+$ make build
+cargo build --target wasm32-unknown-unknown
+    Finished dev [unoptimized + debuginfo] target(s) in 0.05s
+```
+This will generate a .wasm module for the crate which we can inspect using:
+```console
+$ make inspect-wasm-wat > wat
+```
+This will have the format that will looks like the .wat example that we showed
+above. 
+
+The next step is to create a wasm component of this which we do using the
+`wasm-tools component` command and we specify our .wasm file as input:
 ```console
 $ make component 
 wasm-tools component new ./target/wasm32-unknown-unknown/debug/wit_bindgen_example.wasm \
 -o example-component.wasm
 ```
 This will generate a new wasm module named `example-component.wasm`.
+
 We can inspect the wat of this using the following command:
 ```console
-$ make inspect-wat > wat
+$ make inspect-component-wat > component.wat
 ```
+If we inspect the .wat for the component module we will see that it is different
+from the module (wit_bindgen_example.wasm).
 
 Now, lets take a look at running this example and we will use JavaScript as
 the first language. The example can be found in
