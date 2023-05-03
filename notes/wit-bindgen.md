@@ -238,7 +238,7 @@ $ make build
 cargo build --target wasm32-unknown-unknown
     Finished dev [unoptimized + debuginfo] target(s) in 0.05s
 ```
-This will generate a .wasm module for the crate which we can inspect using:
+This will generate a core .wasm module for the crate which we can inspect using:
 ```console
 $ make inspect-wasm-wat > wat
 ```
@@ -260,6 +260,8 @@ $ make inspect-component-wat > component.wat
 ```
 If we inspect the .wat for the component module we will see that it is different
 from the module (wit_bindgen_example.wasm).
+__TODO__: Add details about the WebAssembly Component Model here or in a separate
+document.
 
 Now, lets take a look at running this example and we will use JavaScript as
 the first language. The example can be found in
