@@ -306,3 +306,38 @@ __wip__
 [alloc]: https://doc.rust-lang.org/alloc/index.html
 [string]: https://doc.rust-lang.org/alloc/string/struct.String.html
 [jco]: https://github.com/bytecodealliance/jco
+
+
+### TinyGo issue
+When trying to run the test suite in wit-bindgen I ran into the following error:
+```console
+$ cargo t --workspace
+---- option_result stdout ----
+running cd "/home/danielbevenius/work/wasm/wit-bindgen/target/codegen-tests/guest-go-option-result/my_world" && "tinygo" "build" "-target=wasi" "-o" "go.wasm" "my-world.go"
+thread 'option_result' panicked at '
+status: exit status: 1
+
+stdout ---
+
+
+stderr ---
+error: requires go version 1.18 through 1.19, got go1.20
+	', crates/test-helpers/src/lib.rs:45:5
+```
+And indeed if I run the came command I get this error:
+```console
+$ cd target/codegen-tests/guest-go-option-result/my_world/
+$ tinygo build -target=wasi -o go.wasm my_world.go
+```
+The version of TinyGo 
+```console
+$ tinygo version
+tinygo version 0.26.0 linux/amd64 (using go version go1.20.2 and LLVM version 15.0.0)
+```
+I installed this version using `dnf` but there is a later version 0.27.0 which
+support Go 1.20.
+```console
+$ wget https://github.com/tinygo-org/tinygo/releases/download/v0.27.0/tinygo0.27.0.linux-amd64.tar.gz
+```
+If we unpack this and add the bin directory to our path the test suite can be
+run without this error.
