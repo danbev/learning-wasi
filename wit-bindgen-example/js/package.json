@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.mjs",
+  "config": {
+    "wasm_file": "../example-component.wasm"
+  },
   "scripts": {
-    "bindings": "npx jco transpile ../example-component.wasm -o dist",
-    "inspect-wit": "npx jco wit ../example-component.wasm",
-    "inspect-wasm": "npx jco wit ../example-component.wasm",
-    "print-wat": "npx jco print ../example-component.wasm | rustfilt",
+    "bindings": "npx jco transpile $npm_package_config_wasm_file -o dist",
+    "inspect-wit": "npx jco wit $npm_package_config_wasm_file",
+    "inspect-wasm": "npx jco wit $npm_package_config_wasm_file",
+    "print-wat": "npx jco print $npm_package_config_wasm_file | rustfilt",
     "example": "node index.mjs"
   },
   "author": "",
