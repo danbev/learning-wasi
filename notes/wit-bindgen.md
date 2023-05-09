@@ -232,6 +232,19 @@ a function with the same name without a compilation error.
 Also notice the `#[export_name = "something"`, so this is the function that will
 be called later by an external host.
 
+We can see what wit-bindgen will generate using the wit-bindgen cli tool which
+can be installed using the following command:
+```console
+$ cargo install --git https://github.com/bytecodealliance/wit-bindgen wit-bindgen-cli
+```
+And then we can generate the bindings for rust using:
+```console
+$ wit-bindgen rust wit/component.wit 
+Generating "component.rs"
+```
+This will generate [component.rs](../component.rs) which is what the macros do
+as well.
+
 When build the wasm module like we would normally do, using:
 ```console
 $ make build
