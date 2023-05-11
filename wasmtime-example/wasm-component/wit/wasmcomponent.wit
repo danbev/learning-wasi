@@ -1,0 +1,4 @@
+default world wasmcomponent {
+   import name: func() -> string
+   export something: func(s: string) -> string
+} 

@@ -1,0 +1,18 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.71"
+wasmtime = { version = "8.0.1", features = [ "component-model", "cranelift" ] }
+wasmtime-wasi = "8.0.1"
+
+[[bin]]
+name = "wasm"
+path = "src/wasm.rs"
+
+
+[[bin]]
+name = "wasi"
+path = "src/wasi.rs"
