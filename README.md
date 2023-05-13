@@ -35,6 +35,21 @@ typedef struct uvwasi_ciovec_s {
 ```
 So we can see that we have a pointer to a buffer and a length.
 
+We make a .wasm module for this using:
+```console
+$ make out/fd_write.wasm
+wat2wasm -v -o out/fd_write.wasm src/fd_write.wat --debug-names
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+...
+```
+And then we can run this using a wasm runtime like wasmtime:
+```console
+$ ~/work/wasm/wasmtime/target/debug/wasmtime out/fd_write.wasm 
+something
+```
+
 ### WASI api calls explained
 This section is an attempt to answer a question I asked myself while working
 on a uvwasi [issue](https://github.com/nodejs/uvwasi/pull/176). The fix in this

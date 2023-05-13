@@ -1,5 +1,5 @@
 (module
-    (import "wasi_unstable" "fd_write" 
+    (import "wasi_snapshot_preview1" "fd_write" 
         (func $print (param $fd i32) 
 	             (param $iovec i32)
 		     (param $len i32)
