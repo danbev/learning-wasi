@@ -1,3 +1,4 @@
 target
 example-wasi-component.wasm
 example-wasm-component.wasm
+example-wasi-component-reactor.wasm
