@@ -8,6 +8,9 @@ component:
 	wasm-tools component new ./target/wasm32-unknown-unknown/debug/wasm_component.wasm \
 	-o example-wasm-component.wasm
 
+wit-bindgen:
+	wit-bindgen rust wit/wasmcomponent.wit
+
 
 # The wasm32-wasi target supports wasi_snapshot_preview1 which is based on
 # .witx files. This is not compatible with the component model. But we can
