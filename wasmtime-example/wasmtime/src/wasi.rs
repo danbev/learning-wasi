@@ -81,7 +81,7 @@ async fn main() -> wasmtime::Result<()> {
 
     let (reactor, _instance) =
         Wasmcomponent::instantiate_async(&mut store, &component, &linker).await?;
-    let r = reactor.call_something(&mut store, "bajja").await?;
-    println!("{r:?}");
+    let string: String = reactor.call_something(&mut store, "from rust").await?;
+    println!("{string:?}");
     Ok(())
 }
