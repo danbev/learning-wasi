@@ -4,7 +4,7 @@ project(learning-wasi
 	VERSION 0.1 
 	DESCRIPTION "Project for learning about WASI ")
 
-set(LLVM_HOME $ENV{HOME}/work/wasm/wasi-sdk/download/wasi-sdk-8.0 CACHE STRING "llvm home")
+set(LLVM_HOME $ENV{HOME}/work/wasm/wasi-sdk-14.0 CACHE STRING "llvm home")
 set(LLVM_BIN ${LLVM_HOME}/bin CACHE STRING "llvm bin")
 set(WASI_SYSROOT ${LLVM_HOME}/share/wasi-sysroot CACHE STRING "wasi-sysroot")
 set(TRIPLE wasm32-wasi CACHE STRING "triple")
