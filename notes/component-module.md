@@ -39,7 +39,7 @@ WebAssembly spec/model.
 ```
   Imports   +--------------------------------+  Exports
             | WebAssembly Component          |
-            |  [type]                        |
+            |  <types>                       |
    -------->|                                |---------->
    -------->|                                |---------->
    -------->| +---------------------------+  |---------->
@@ -50,6 +50,13 @@ WebAssembly spec/model.
             | +---------------------------+  |
             +--------------------------------+
 ```
+We still imports and exports, but these functions use types defined in
+an Interface Definition Language (IDL) called WebAssembly Interface Types (WIT)
+which describe the interfaces. The WebAssembly Core Modules are still the same
+core modules as we had without the component module, so the sources for these
+core modules could have been written in any language that can compile to wasm.
+The component module will then take care of translating between the types used
+in the WIT and the types that the core modules work with.
 
 Features of the Component Model are:
 * Marshaling of types between modules in a standard way
@@ -89,7 +96,10 @@ instance but they are completely separate.
 
 ### Interface Types
 Interface types which allow for an language indepedent format for describing
-the functions and types that a module imports/exports.
+the functions and types that a module imports/exports. It uses an Interface
+Definition Language (IDL) to specify this information which can then be
+processed by language specific tools to generate types in the corresponding
+languages.
 
 * bool
 * s8, s16, s32, s64  signed ints
@@ -115,4 +125,11 @@ type sometype = u32
 ### Canonical ABI
 TODO:
 
-
+### WASI and the Component Model
+The next version of wasi, preview2, is based on the WIT IDL and the component
+model. This is different from wasi preview1 and there are some incompatabilities
+beteen these models. So if we have a wasi preview1 model it will need to be
+adapted to preview2 which can be done using `--adapt` with `wasm-tools`:
+```console
+$ wasm-tools component new -v ../target/wasm32-wasi/debug/seedwing_policy_engine.wasm --adapt wasi_snapshot_preview1.wasm -o seedwing_policy-engine-component.wasm
+```
