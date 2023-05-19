@@ -1,0 +1,9 @@
+[package]
+name = "wasi_snapshot_preview1"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+wiggle = "8.0.1"
