@@ -1,3 +1,5 @@
 import { something } from './dist/example-component.js';
 
-console.log(something("bajja"));
+let ret = something("bajja");
+
+console.log(ret);
