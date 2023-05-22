@@ -49,7 +49,7 @@ static mut _RET_AREA: _RetArea = _RetArea([0; 8]);
 
 /// Declares the export of the component's world for the
 /// given type.
-
+#[macro_export]
 macro_rules! export_component(($t:ident) => {
   const _: () = {
     
