@@ -15,16 +15,17 @@ $ cargo install wasm-tools
 ### Building
 First we need to compile our Rust code using the wasm32 target:
 ```console
-$ make build
-cargo build --target wasm32-unknown-unknown
+$ make build-wasi
+cargo build --target wasm32-wasi
     Finished dev [unoptimized + debuginfo] target(s) in 0.03s
 ```
 
 Next, we need to generate a wasm component for the wasm that we built:
 ```console
-$ make component 
-wasm-tools component new ./target/wasm32-unknown-unknown/debug/wit_bindgen_example.wasm \
--o example-component.wasm
+$ make component-wasi 
+wasm-tools component new ./target/wasm32-wasi/debug/wit_bindgen_example.wasm \
+--adapt wasi_snapshot_preview1.wasm \
+-o example-wasi-component.wasm
 ```
 
 ### Inspecting the wit
@@ -37,8 +38,25 @@ default world example-component {
 ```
 
 ###  Running the wasm component
-Currently we have two examples of how to run this wasm component:
-* [JavaScript](./js)
-* [Python](./python)
+Currently we have the following examples of running this wasm component:
+
+#### JavaScript
+The [JavaScript](./js) version can be run using:
+```console
+$ make js-bindings
+$ make js-run
+```
+
+#### Python
+The [Python](./python) version can be run using:
+```console
+$ make python-bindings
+$ make python-run
+```
+#### Rust
+The [Rust](./rust) version can be run using:
+```console
+$ make rust-bindings
+$ make rust-run
 
 [wit-bindgen]: https://github.com/bytecodealliance/wit-bindgen
