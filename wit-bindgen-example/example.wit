@@ -1,4 +1,0 @@
-// wit/host.wit
-default world host {
-  export something: func(s: string) -> string
-}
