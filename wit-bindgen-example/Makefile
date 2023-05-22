@@ -30,7 +30,10 @@ inspect-component-wat:
 	@wasm-tools print example-component.wasm | rustfilt
 
 objdump-module:
-	@wasm-tools objdump ./target/wasm32-unknown-unknown/debug/wit_bindgen_example.wasm \
+	@wasm-tools objdump ./target/wasm32-unknown-unknown/debug/wit_bindgen_example.wasm
+
+objdump-wasi-module:
+	@wasm-tools objdump ./target/wasm32-wasi/debug/wit_bindgen_example.wasm 
 
 objdump-component:
 	@wasm-tools objdump example-component.wasm
