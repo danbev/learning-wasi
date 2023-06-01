@@ -241,6 +241,33 @@ they can be resolved, for example:
 ```
 For a complete example please take a look at [wasmtime-example].
 
+
+### Issue 2
+After a number of changes to wasmtime I had to refactor an example what we have
+and I ran into the simlar issue once again: 
+```console
+$ cargo r
+   Compiling rust v0.1.0 (/home/danielbevenius/work/security/seedwing/seedwing-policy/engine/rust)
+warning: unused import: `wasi::command`
+Error: import `wasi:filesystem/filesystem` has the wrong type
+
+Caused by:
+    0: instance export `write-via-stream` has the wrong type
+    1: type mismatch with results
+    2: expected `result` found `u32
+```
+After some troubleshooting I realized that the adapter .wasm had been updated
+, actually it has not been moved out of the [preview-prototype2] repo into
+the wasmtime repo. I built that .wasm and used it instead and then compiled
+the core wasm module, and then created a component from it. I had also
+previously had/been using some preview1 specific code to add the correct
+functions to the linker which were no longer required. So the whole adapter
+code was removed. See [main.rs] for details.
+
+[main.r]: https://github.com/danbev/seedwing-policy/blob/cf77bfa96b388e0036e924c5ba2516363bff7f4a/engine/rust/src/main.rs
+
+[preview-prototype2]: https://github.com/bytecodealliance/preview2-prototyping
+
 [wasmtime-example]: wasmtime-example/wasmtime/src/wasi.rs
 
 [filesystem]: https://github.com/webassembly/wasi-filesystem
