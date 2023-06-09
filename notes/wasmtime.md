@@ -600,3 +600,25 @@ these .wasm files will use root.core0.wasm. I'm been going back and forth about
 if I should change this from root to bindgen or not. 
 
 
+### Building 
+To build the c-api in wasmtime the following command can be used:
+```console
+$ cargo build --release --manifest-path crates/c-api/Cargo.toml
+```
+On my linux system/platform the above command will generate the following
+libraries:
+```
+target/release/libwasmtime.a
+target/release/libwasmtime.so
+```
+Next, we can run a script that creates a release tar. The motivation for doing
+this is that I wanted to try out an unreleased version with the wasmtime-py
+project.
+```console
+$ ./ci/build-tarballs.sh linux
+```
+That script will generate two compressed tar files in dist:
+```console
+$ ls dist/
+wasmtime-dev-linux-c-api.tar.xz  wasmtime-dev-linux.tar.xz
+```
