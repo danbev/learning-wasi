@@ -262,3 +262,100 @@ adapted to preview2 which can be done using `--adapt` with `wasm-tools`:
 ```console
 $ wasm-tools component new -v ../target/wasm32-wasi/debug/seedwing_policy_engine.wasm --adapt wasi_snapshot_preview1.wasm -o seedwing_policy-engine-component.wasm
 ```
+
+### Resource types (handles)
+To avoid having to copy of data types, for example if they are large or perhaps
+if they contain recursive structures which is currently not supported by the
+current component model version. These are similar to file descriptors in an 
+operating system. So we can have a resource id which is passed to a component
+and can also be passed back without the wasm runtime having to lower and lift
+the types.
+Again simliar to how file descriptors are handled in a file descriptor table and
+indexed using integers (think of stdin (0), stdout(1), and stderr(2)), the
+component model specifies a `handle table`.
+
+```
+(resource (rep i32) (dtor <funcidx>)?)
+```
+
+So we would define a 
+```
+resource some-resource {
+
+   drop-fn: func()
+}
+```
+The `drop-fn` functions will be called when the last handle to this resources
+is dropped.
+
+The type `own` is a handle type that declares/defines an opaque address of a
+resource that will be destroyed when it is dropped.
+The type `borrow` is a handle type that declares/defines an opaque address of a
+resource that must be dropped before the current export call returns.
+
+A type in a wit can be of type `resourcetype`.
+
+
+### Recursive types support
+At the time of this writing, before the MVP release of the component model,
+support for recursive types is [not supported]. 
+
+This means that modeling the wit types directly after the types in seedwing
+policy engine will not work. 
+
+For example, that this type:
+```
+record evaluation-result {
+  input: runtime-value,
+  ty: pattern,
+  rationale: rationale,
+  output: string,
+  }
+```
+The field `ty` is of type `pattern`:
+```
+  record pattern {
+    name: option<pattern-name>,
+    metadata: pattern-meta,
+    examples: list<example>,
+    parameters: list<string>,
+    inner: inner-pattern,
+  }
+```
+This is still alright and not a recursive pattern. But if we look closer at
+inner we will see the issue(s):
+```
+  variant inner-pattern {
+    anything, 
+    primordial(primordial-pattern),
+    //bound(tuple<pattern, bindings>),
+    //ref(tuple<syntactic-sugar, u32, list<pattern>),
+    //deref(pattern),
+    argument(string), 
+    const(value-pattern),
+    object(object-pattern),
+    //expr(expr), // recursive pattern
+    //%list(list<pattern>), // recursive pattern
+    nothing,
+  }
+```
+Notice that the commented out fields of tihs variant/enum are of the type
+`pattern` which is also the type of inner-pattern.
+When we write a pattern in Dogma (the name of the policy language in Seedwing)
+it can look something like this:
+```
+pattern something = 10
+```
+This has a pattern-name which is 'something' and the inner-type here would be
+primordial-pattern variant of integer. This would match any input that is the
+number 10. 
+
+```
+pattern something = [1, 2]
+```
+This has a pattern-name which is 'something' and the inner-type here would be
+list of patterns, which contains primordial-pattern vairants type integers.
+
+This would match a input of  [1, 2]
+
+[not suppported]: https://github.com/WebAssembly/component-model/issues/56#issuecomment-1557472099
