@@ -358,11 +358,25 @@ list of patterns, which contains primordial-pattern vairants type integers.
 
 This would match a input of  [1, 2].
 
+We can also imaging that these can be nested like this:
+```
+pattern something = [[1],[2]]
+```
+Here we have a pattern with a list of lists. The inner-pattern will contains
+a list of patterns, and those patterns are also lists which hold integers.
+
+
 The wit types are completely separate from the Seedwing policy types and these
 types are converted to/from in src/wit.rs. So we can evolve them separately
 and we also have the ability to represent them differently. The idea we have
 currently is to have a version of 0.1.0 which types that work around the lack
 of recursive types in wit and then when recurive types are supported we can
 do a major version bump with this breaking change.
+
+Another option is to use resource types for this which will be available in
+the MVP. In this case we could declare a resource type for the `ty` field of
+EvaluationResult, and this resource would be created by the `eval` function.
+This would also mean that there will not be any copying taking place between
+the host and the guest.
 
 [not suppported]: https://github.com/WebAssembly/component-model/issues/56#issuecomment-1557472099
