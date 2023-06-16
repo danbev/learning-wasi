@@ -356,6 +356,13 @@ pattern something = [1, 2]
 This has a pattern-name which is 'something' and the inner-type here would be
 list of patterns, which contains primordial-pattern vairants type integers.
 
-This would match a input of  [1, 2]
+This would match a input of  [1, 2].
+
+The wit types are completely separate from the Seedwing policy types and these
+types are converted to/from in src/wit.rs. So we can evolve them separately
+and we also have the ability to represent them differently. The idea we have
+currently is to have a version of 0.1.0 which types that work around the lack
+of recursive types in wit and then when recurive types are supported we can
+do a major version bump with this breaking change.
 
 [not suppported]: https://github.com/WebAssembly/component-model/issues/56#issuecomment-1557472099
