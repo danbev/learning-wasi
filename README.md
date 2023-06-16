@@ -14,6 +14,14 @@ $ wasmtime --version
 wasmtime-cli 0.40.0
 ```
 
+### Interface Types
+The interface of wasi is defined in `.witx` files. The .witx files for
+[wasi_snapshot_preview1] can be used by a tool like wasmtime's `wiggle` tool
+generate traits for Rust which can then be implemented. Other tools can generate
+simlar constructs for other languages. These traits are then implemented.
+
+[wasi_snapshot_preview1]: https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/witx/wasi_snapshot_preview1.witx
+
 ### fd_write
 The example [fd_write.wat](src/fd_write.wat) shows the usage of the
 [fd_write](https://github.com/WebAssembly/WASI/blob/master/design/WASI-core.md#__wasi_fd_write) system call.
