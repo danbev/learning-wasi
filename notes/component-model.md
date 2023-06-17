@@ -339,8 +339,9 @@ inner we will see the issue(s):
     nothing,
   }
 ```
-Notice that the commented out fields of tihs variant/enum are of the type
+Notice that the commented out fields of this variant/enum are of the type
 `pattern` which is also the type of inner-pattern.
+
 When we write a pattern in Dogma (the name of the policy language in Seedwing)
 it can look something like this:
 ```
@@ -353,8 +354,8 @@ number 10.
 ```
 pattern something = [1, 2]
 ```
-This has a pattern-name which is 'something' and the inner-type here would be
-list of patterns, which contains primordial-pattern vairants type integers.
+This has a pattern name which is 'something' and the inner-type here would be
+list of patterns, which contains primordial-pattern variant type of integers.
 
 This would match a input of  [1, 2].
 
