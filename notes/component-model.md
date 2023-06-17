@@ -340,7 +340,49 @@ inner we will see the issue(s):
   }
 ```
 Notice that the commented out fields of this variant/enum are of the type
-`pattern` which is also the type of inner-pattern.
+`pattern` which is also the type of inner-pattern. If we were to uncomment that
+line we would get the following error:
+```console
+$ make wit-compile 
+cargo b --release -p seedwing-policy-engine --target=wasm32-wasi --no-default-features --features=""
+   Compiling seedwing-policy-engine v0.1.0 (/home/danielbevenius/work/security/seedwing/seedwing-policy/engine)
+error: failed to parse package: /home/danielbevenius/work/security/seedwing/seedwing-policy/engine/wit
+       
+       Caused by:
+           type `pattern` depends on itself
+                --> /home/danielbevenius/work/security/seedwing/seedwing-policy/engine/wit/engine-types.wit:101:16
+                 |
+             101 |     %list(list<pattern>), // recursive pattern
+                 |                ^------
+  --> engine/src/wit.rs:22:1
+   |
+22 | wit_bindgen::generate!("engine-world");
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the macro `wit_bindgen::generate` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0433]: failed to resolve: could not find `exports` in `wit`
+  --> engine/src/wit.rs:17:17
+   |
+17 | use crate::wit::exports::seedwing::policy::engine::Engine;
+   |                 ^^^^^^^ could not find `exports` in `wit`
+
+error[E0433]: failed to resolve: could not find `seedwing` in `wit`
+  --> engine/src/wit.rs:18:17
+   |
+18 | use crate::wit::seedwing::policy::types as wit_types;
+   |                 ^^^^^^^^ could not find `seedwing` in `wit`
+
+error: cannot find macro `export_engine_world` in this scope
+  --> engine/src/wit.rs:55:1
+   |
+55 | export_engine_world!(Exports);
+   | ^^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0433`.
+error: could not compile `seedwing-policy-engine` due to 4 previous errors
+make: *** [Makefile:5: wit-compile] Error 101
+```
 
 When we write a pattern in Dogma (the name of the policy language in Seedwing)
 it can look something like this:
@@ -370,8 +412,8 @@ a list of patterns, and those patterns are also lists which hold integers.
 The wit types are completely separate from the Seedwing policy types and these
 types are converted to/from in src/wit.rs. So we can evolve them separately
 and we also have the ability to represent them differently. The idea we have
-currently is to have a version of 0.1.0 which types that work around the lack
-of recursive types in wit and then when recurive types are supported we can
+currently is to have a version of 0.1.0 with types that work around the lack
+of recursive types in wit, and then when recurive types are supported we can
 do a major version bump with this breaking change.
 
 Another option is to use resource types for this which will be available in
@@ -379,5 +421,10 @@ the MVP. In this case we could declare a resource type for the `ty` field of
 EvaluationResult, and this resource would be created by the `eval` function.
 This would also mean that there will not be any copying taking place between
 the host and the guest.
+
+But what if we wanted define all the types using wit, how would we handle the
+case above with the `pattern` type?   
+
+
 
 [not suppported]: https://github.com/WebAssembly/component-model/issues/56#issuecomment-1557472099
