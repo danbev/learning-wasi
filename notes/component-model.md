@@ -148,7 +148,7 @@ wasm-tools component new ./target/wasm32-wasi/debug/wit_bindgen_example.wasm \
 ```
 The reason for using `--adapt` is that the version of wasi used by the target
 `wasm32-wasi` is based on `.witx` type definitions which are not compatible with
-the omponent model which uses wit. This is like a polyfill from
+the component model which uses wit. This is like a polyfill from
 wasi_snapshot_preview1 to wasi preview2.
 
 We can then inspect the component:
@@ -188,8 +188,13 @@ Notice that the `module 0` is pretty much the same as the core module apart from
 the custom section `component-type::component` not present. This is what we
 meant above about the component model "wrapping" core modules.
 
-Now, with or component module we can now use it with languages that provide a
-wasm runtime that supports the webassembly component model.
+Now, with our component module we can now use it with languages that provide a
+wasm runtime that supports the webassembly component model. The example
+currently includes [JavaScript], [Python], and [Rust].
+
+[JavaScript]: ../wit-bindgen-example/js
+[Python]: ../wit-bindgen-example/python
+[Rust]: ../wit-bindgen-example/rust
 
 Features of the Component Model are:
 * Marshaling of types between modules in a standard way
@@ -220,7 +225,7 @@ many others and thereby saving memory and storage.
 A module described a sort of library that can export/provide functions from
 itself, and can import/consume function from others. Think of a shared library
 which can export functions and can also expect symbols to be provided by
-externa libraries.
+external libraries.
 
 A model that has been loaded into a component instance, is called a module
 instance. A model instance shares the memory and resources of the component
@@ -428,7 +433,5 @@ the host and the guest.
 
 But what if we wanted define all the types using wit, how would we handle the
 case above with the `pattern` type?   
-
-
 
 [not suppported]: https://github.com/WebAssembly/component-model/issues/56#issuecomment-1557472099
