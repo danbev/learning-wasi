@@ -1,7 +1,7 @@
 ## WebAssembly Component Model
 The wasm spec provides a arch, platform, and languague indepedant format of
 executable code. Such a module can import functions from the host and export
-function to the host (and also memory and tables). This type of webassembly
+function to the host (and also memories and tables). This type of webassembly
 module will be called a core webassembly module:
 ```
  Imports                    Exports
@@ -22,17 +22,17 @@ can generate types in JavaScript and allow us to work with, passing/receiving
 types in the host language, so we are no longer constrained to only the core
 module data types.
 
-What is not available it the ability to compose modules and if one module want
-to communicate with another, they have to resort to host binding as it stands
-today. If our functions use complex types, like strings, structs ("records"),
-then we would have to generate bindings for the functions first, then import
-both modules into a host languague, perhaps JavaScript and then call the first
-function and then then other (something like that). The point is that there is
-no way to get this kind of integration without having to jump through those
-hoops.
+What is not available it the ability to compose modules, like if one module
+wants to communicate with another, they have to resort to host binding as it
+stands today. If our functions uses complex types, like strings, structs
+("records"), then we would have to generate bindings for the functions first,
+then import both modules into a host languague, perhaps JavaScript and then call
+the first function and then then other (something like that). The point is that
+there is no way to get this kind of integration without having to jump through
+those hoops.
 
-What the WebAssembly Component Model provides the following on top of the core
-WebAssembly spec/model and which "wraps" core wasm modules:
+What the WebAssembly Component Model provides is the following on top of the
+core WebAssembly spec/model, and it "wraps" core wasm modules:
 ```
   Imports   +--------------------------------+  Exports
             | WebAssembly Component          |
@@ -49,10 +49,13 @@ WebAssembly spec/model and which "wraps" core wasm modules:
 ```
 We still imports and exports in the component, but these functions use types
 defined in an Interface Definition Language (IDL) called WebAssembly Interface
-Types (WIT) which describe the interfaces. The WebAssembly Core Modules are
-still the same core modules as we had without the component module, so the
-sources for these core modules could have been written in any language that can
-compile to wasm.
+Types (WIT) which describe the interfaces.
+
+The WebAssembly Core Modules are still the same core modules as we had without
+the component module, so the sources for these core modules could have been
+written in any language that can compile to wasm. The difference is that they
+will contains a custom section which we will see later in this document.
+
 The following is a simple example of a
 [wit](../wit-bindgen-example/wit/component.wit):
 ```
@@ -61,8 +64,8 @@ default world component {
 }
 ```
 The `world` keyword defines a component named `component`. This is what a
-guest language uses to figure out what functions are imported and exported. In this
-case only a single function is exported named `something` and it takes a
+guest language uses to figure out what functions are imported and exported. In
+this case only a single function is exported named `something` and it takes a
 `string` types and returns a `string` which are WIT types.
 
 The wit file can be used by tools to generate bindings for the guest language
@@ -85,8 +88,8 @@ And what is actually exported is:
     }
 ```
 And the `call_something` function will take care of converting from the core
-wasm types, in this case two i32 which the first one represents a pointer into
-the linear memory, and the second is the lenght:
+wasm types, in this case two i32 of which the first one represents a pointer
+into the linear memory, and the second is the length:
 ```rust
 pub unsafe fn call_something<T: Component>(arg0: i32,arg1: i32,) -> i32 {
   ...
@@ -107,6 +110,7 @@ cargo build --target wasm32-wasi
    Compiling wit-bindgen-example v0.1.0 (/home/danielbevenius/work/wasm/learning-wasi/wit-bindgen-example)
     Finished dev [unoptimized + debuginfo] target(s) in 0.09s
 ```
+
 The resulting .wasm file will have a custom section named
 'component-type:component' added to it (which is done by component.rs):
 ```console
@@ -135,7 +139,7 @@ $ make objdump-wasi-module
   custom "target_features"               |   0x22c2f3 -   0x22c31c |        41 bytes | 1 count
 ```
 The next step is to take this core webassembly module and create a webassembly
-component model module.
+component model module:
 ```console
 $ make component-wasi 
 wasm-tools component new ./target/wasm32-wasi/debug/wit_bindgen_example.wasm \
