@@ -1,8 +1,8 @@
 ## WebAssembly Component Model
-The wasm spec provides a arch, platform, and languague indepedant format of
-executable code. Such a module can import functions from the host and export
-function to the host (and also memories and tables). This type of webassembly
-module will be called a core webassembly module:
+The wasm spec provides a portable instruction set. Such a module can import
+functions from the host and export function to the host (and also memories and
+tables). This type of webassembly module will be called a core webassembly
+module:
 ```
  Imports                    Exports
              +-------------+
@@ -202,7 +202,8 @@ Types in core webassembly modules get translated into the types specified by
 the component model. This enables one core module to have imports from another
 core module and the webassembly component runtime will be able to handle these
 type conversions. What previsouly required host bindings like wasm-bindgen would
-not be requied.
+not be requied. The runtime may even be able to perform copying directly into
+the linear memory of the wasm modules to improve performance.
 
 * linking modules
 TODO:
