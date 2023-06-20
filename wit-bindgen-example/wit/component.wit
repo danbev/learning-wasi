@@ -1,3 +1,5 @@
-default world component {
+package wit-bindgen-example:demo
+
+world component {
   export something: func(s: string) -> string
 }

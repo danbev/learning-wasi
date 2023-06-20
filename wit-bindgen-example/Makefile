@@ -13,9 +13,8 @@ component:
 
 component-wasi:
 	wasm-tools component new ./target/wasm32-wasi/debug/wit_bindgen_example.wasm \
-	--adapt wasi_snapshot_preview1.wasm \
+	--adapt wasi_snapshot_preview1=wasi_preview1_component_adapter.wasm \
 	-o example-wasi-component.wasm
-
 
 inspect-wit:
 	@wasm-tools component wit example-component.wasm
@@ -57,10 +56,10 @@ python-run:
 
 # Rust targets
 rust-bindings:
-	cd rust && cargo b
+	cd rust && cargo b --release
 
 rust-run:
-	cd rust && cargo r --bin main
+	cd rust && cargo r --release --bin main
 
 clean:
 	cargo clean
