@@ -1,16 +1,12 @@
-bindgen!(in "../wasm-component/wit");
+use wasmtime::{
+    component::{bindgen, Component, Linker},
+    Config, Engine, Store,
+};
 
-use wasmtime::component::{bindgen, Component, Linker};
-use wasmtime::{Config, Engine, Store};
+bindgen!(in "../wasm-component/wit");
 
 struct MyState {
     name: String,
-}
-
-impl WasmcomponentImports for MyState {
-    fn name(&mut self) -> wasmtime::Result<String> {
-        Ok(self.name.clone())
-    }
 }
 
 fn main() -> wasmtime::Result<()> {
@@ -20,8 +16,7 @@ fn main() -> wasmtime::Result<()> {
 
     let component = Component::from_file(&engine, "../wasm-component/example-wasm-component.wasm")?;
 
-    let mut linker = Linker::new(&engine);
-    Wasmcomponent::add_to_linker(&mut linker, |state: &mut MyState| state)?;
+    let linker = Linker::new(&engine);
     let mut store = Store::new(
         &engine,
         MyState {

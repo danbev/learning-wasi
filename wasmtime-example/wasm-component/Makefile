@@ -18,7 +18,7 @@ wit-bindgen:
 # wasm32-wasi generates. This is done using the --adapt option.
 component-wasi-reactor:
 	wasm-tools component new ./target/wasm32-wasi/debug/wasm_component.wasm \
-	--adapt wasi_snapshot_preview1=wasi_preview1_component_adapter.reactor.wasm \
+	--adapt wasi_snapshot_preview1=wasi_preview1_component_adapter.wasm \
 	-o example-wasi-component-reactor.wasm
 
 # This is currently not used as there is not _start in the current example.

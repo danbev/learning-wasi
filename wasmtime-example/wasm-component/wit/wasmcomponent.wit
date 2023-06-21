@@ -1,3 +1,5 @@
-default world wasmcomponent {
+package wasmtime:example
+
+world wasmcomponent {
    export something: func(s: string) -> string
 } 

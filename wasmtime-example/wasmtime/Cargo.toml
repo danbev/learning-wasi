@@ -5,10 +5,11 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.71"
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", rev = "299131ae2d6655c49138bfab2c4469650763ef3b", features = ["component-model"] }
-wasi-common = { git = "https://github.com/bytecodealliance/preview2-prototyping"}
+wasmtime = { path = "/home/danielbevenius/work/wasm/wasmtime/crates/wasmtime", features = ["component-model"] }
+wasi-common = { path = "/home/danielbevenius/work/wasm/wasmtime/crates/wasi-common"}
+wasmtime-wasi = { path = "/home/danielbevenius/work/wasm/wasmtime/crates/wasi", features = ["preview1-on-preview2", "tokio", "sync"]}
 tokio = { version = "1", features = ["full"] }
-
+wat = { path = "/home/danielbevenius/work/wasm/wasm-tools/crates/wat" }
 
 [[bin]]
 name = "wasm"
@@ -18,14 +19,6 @@ path = "src/wasm.rs"
 [[bin]]
 name = "wasi"
 path = "src/wasi.rs"
-
-[[bin]]
-name = "wasi-working"
-path = "src/wasi-working.rs"
-
-[[bin]]
-name = "wasi-module"
-path = "src/wasi-module.rs"
 
 [[bin]]
 name = "linker"
