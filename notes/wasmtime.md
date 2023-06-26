@@ -624,3 +624,13 @@ That script will generate two compressed tar files in dist:
 $ ls dist/
 wasmtime-dev-linux-c-api.tar.xz  wasmtime-dev-linux.tar.xz
 ```
+
+One reason for wanting to build this is that it is used by wasmtime-py which
+I've been working on some updates for. If we have built and installed this
+we can then copy over the shared object file, as long as there have not been
+any updates to the api's that is:
+```console
+$ cp target/release/libwasmtime.so ~/work/wasm/wasmtime-py/wasmtime/linux-x86_64/_libwasmtime.so
+```
+So if we want to add a println statment for debugging we can add it then compile
+and copy the shared object file.
