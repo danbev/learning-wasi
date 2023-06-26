@@ -446,6 +446,7 @@ pub struct Body {
 ```
 The gen field is just a reference to the outer WasmtimePy instance. Resolve
 is the resolved component.
+
 Next, the code sets the interface. After that we have a call to
 `gen.types(iface)` which we will go though which is in the bindgen.rs files
 as `gen` is a reference to WasmtimePy:
@@ -494,7 +495,7 @@ This will create the following lines in
 ```
 InputStream = int
 ```
-So this python variable would be generated to reprent this wit type alias:
+So this python variable would be generated to represent this wit type alias:
 ```wit
 interface streams {
     ...
@@ -502,6 +503,7 @@ interface streams {
 ```
 This will be done for all types in that imported interface (and for the others
 later). 
+
 After the types have been written to the Source a class is created for this
 `Streams` import:
 ```rust
