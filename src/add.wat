@@ -10,7 +10,7 @@
   (;
     Example of using prefix notation where the operation comes first.
   ;)
-  ;; naming parameters is optional and the indexes can b used.
+  ;; naming parameters is optional and the indexes can be used.
   (func $add2(param i32 i32) (result i32)
 	(if (i32.eq (local.get 0) (i32.const 0))
 	  (then
