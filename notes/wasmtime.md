@@ -634,3 +634,10 @@ $ cp target/release/libwasmtime.so ~/work/wasm/wasmtime-py/wasmtime/linux-x86_64
 ```
 So if we want to add a println statment for debugging we can add it then compile
 and copy the shared object file.
+
+### Component Model support in CLI
+I will be possible in the future to run a webassembly component model module
+using the wasmtime command line tool. For example:
+```console
+$ cargo r --bin wasmtime --features="component-model" -- run --wasm-features=component-model --wasi-modules=wasi-common ~/work/security/seedwing/seedwing-policy/target/seedwing-policy-engine-component.wasm
+```
