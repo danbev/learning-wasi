@@ -1,9 +1,13 @@
 ## reqwest-wasi example
-This is an example of using reqwest-wasi to explore how using reqwest-wasi in
+This is an example of using reqwest-wasi to explore how using [reqwest-wasi] in
 a wasm module works.
 
+[reqwest-wasi]: https://github.com/WasmEdge/reqwest
+
 Currently it looks like there is not TLS (Transport Layer Security) so it can
-only access http endpoints and not https endpoints.
+only access http endpoints and not https endpoints. I found out that WasmEdge
+are working on https://github.com/second-state/wasmedge_hyper_rustls which I'm
+going to investigate to see if we can get HTTPS working.
 
 ### Prerequisites
 This example used wasmedge which can be installed using the following command:
