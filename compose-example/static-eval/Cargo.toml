@@ -1,0 +1,10 @@
+[package]
+name = "static-eval"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wit-bindgen = { version = "0.8.0", default-features = true, features = ['macros'] }
+
+[lib]
+crate-type = ["cdylib"]

@@ -1,0 +1,4 @@
+pattern dog = {
+    name: string,
+    trained: boolean
+}

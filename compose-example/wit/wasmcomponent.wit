@@ -1,0 +1,14 @@
+package compose:example
+
+interface engine {
+  eval: func(policy: string) -> string
+}
+
+world wasmcomponent {
+   export engine
+} 
+
+world static-evaluator {
+  import engine
+  export run: func() -> string
+}

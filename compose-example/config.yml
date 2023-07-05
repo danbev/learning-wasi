@@ -1,0 +1,7 @@
+search-paths:
+  - target/
+
+instantiations:
+  $input:
+    arguments:
+      compose:example/engine: example-component
