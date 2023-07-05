@@ -3,15 +3,13 @@ name = "runner"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 anyhow = "1.0.71"
-wasmtime = { path = "/home/danielbevenius/work/wasm/wasmtime/crates/wasmtime", features = ["component-model"] }
-wasi-common = { path = "/home/danielbevenius/work/wasm/wasmtime/crates/wasi-common"}
-wasmtime-wasi = { path = "/home/danielbevenius/work/wasm/wasmtime/crates/wasi", features = ["preview1-on-preview2", "tokio", "sync"]}
+wasmtime = { version = "10.0.1", features = ["component-model"] }
+wasi-common = "10.0.1"
+wasmtime-wasi = { version = "10.0.1", features = ["preview1-on-preview2", "tokio", "sync"]}
 tokio = { version = "1", features = ["full"] }
-wat = { path = "/home/danielbevenius/work/wasm/wasm-tools/crates/wat" }
+wat = "1.0.66"
 
 wasm-gen = "0.1"
 wasmparser = "0.107.0"
