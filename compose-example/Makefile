@@ -27,7 +27,7 @@ build-runner:
 	@cd runner && cargo b
 
 run: 
-	@cd runner && env SEEDWING_POLICY_NAME=dog cargo r
+	@cd runner && env SEEDWING_POLICY_NAME=dog cargo r '{"name": "Fletch", "trained": true}' 
 
 wit-bindgen-wasmcomponent:
 	wit-bindgen rust wit/wasmcomponent.wit -w wasmcomponent
