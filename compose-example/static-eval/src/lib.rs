@@ -1,3 +1,4 @@
+use std::env;
 use std::str;
 wit_bindgen::generate!({
    world: "static-evaluator",
@@ -12,7 +13,13 @@ impl StaticEvaluator for Export {
     fn run() -> String {
         let bytes = include_bytes!("../policy.dog");
         let policy = str::from_utf8(bytes).unwrap();
-        engine::eval(policy)
+
+        if let Ok(policy_name) = env::var("SEEDWING_POLICY_NAME") {
+            println!("policy_name: {policy_name}");
+            return engine::eval(policy);
+        } else {
+            return "Error: Policy name must be set!".to_string();
+        }
     }
 }
 export_static_evaluator!(Export);

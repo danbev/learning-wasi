@@ -60,9 +60,13 @@ async fn main() -> wasmtime::Result<()> {
     }
 
     let component = Component::from_binary(&engine, bytes)?;
+    let vars: Vec<_> = std::env::vars().collect();
 
     let mut table = Table::new();
-    let wasi_ctx = WasiCtxBuilder::new().inherit_stdio().build(&mut table)?;
+    let wasi_ctx = WasiCtxBuilder::new()
+        .inherit_stdio()
+        .set_env(&vars)
+        .build(&mut table)?;
     let ctx = CommandCtx { table, wasi_ctx };
 
     let mut store = Store::new(&engine, ctx);
