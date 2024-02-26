@@ -1,11 +1,11 @@
-use wasi_common::sync::WasiCtxBuilder;
-use wasmtime::*;
+use wasmtime::{Engine, Linker, Module, Result, Store};
+use wasmtime_wasi::WasiCtxBuilder;
 
 fn main() -> Result<()> {
     // Define the WASI functions globally on the `Config`.
     let engine = Engine::default();
     let mut linker = Linker::new(&engine);
-    wasi_common::sync::add_to_linker(&mut linker, |s| s)?;
+    wasmtime_wasi::sync::add_to_linker(&mut linker, |s| s)?;
 
     // Create a WASI context and put it in a Store; all instances in the store
     // share this context. `WasiCtxBuilder` provides a number of ways to
