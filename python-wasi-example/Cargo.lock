@@ -599,7 +599,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "python-example"
+name = "python-wasi-example"
 version = "0.1.0"
 dependencies = [
  "pyo3",
